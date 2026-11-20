@@ -1,0 +1,70 @@
+@model InvoiceScanner.Models.Permission
+
+@{
+    ViewData["Title"] = "Permission Details";
+}
+
+<div class="container-fluid">
+    <div class="card card-border">
+        <div class="card-header py-3">
+            <h6 class="mb-0 fw-bold">Permission Details</h6>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Name:</dt>
+                        <dd class="col-sm-8">@Model.Name</dd>
+                        
+                        <dt class="col-sm-4">Category:</dt>
+                        <dd class="col-sm-8"><span class="badge bg-primary">@Model.Category</span></dd>
+                        
+                        <dt class="col-sm-4">Description:</dt>
+                        <dd class="col-sm-8">@Model.Description</dd>
+                    </dl>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Roles with this Permission</h6>
+                        </div>
+                        <div class="card-body">
+                            @if (ViewBag.RolesWithPermission != null && ViewBag.RolesWithPermission.Count > 0)
+                            {
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var role in ViewBag.RolesWithPermission)
+                                    {
+                                        <span class="badge bg-success">@role</span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">No roles have been assigned this permission.</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <hr class="my-4" />
+            
+            <div class="d-flex justify-content-between">
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fa fa-arrow-left"></i> Back to List
+                </a>
+                <div>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        <i class="fa fa-edit"></i> Edit
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                        <i class="fa fa-trash"></i> Delete
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

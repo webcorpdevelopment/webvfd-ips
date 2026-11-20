@@ -1,0 +1,66 @@
+@model InvoiceScanner.Models.Permission
+
+@{
+    ViewData["Title"] = "Edit Permission";
+}
+
+<div class="container-fluid">
+    <div class="card card-border">
+        <div class="card-header py-3">
+            <h6 class="mb-0 fw-bold">Edit Permission</h6>
+        </div>
+        <div class="card-body">
+            <form asp-action="Edit" class="row g-3">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Name" class="form-label">Permission Name</label>
+                        <input asp-for="Name" class="form-control" placeholder="Enter permission name" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                        <small class="form-text text-muted">Example: Module.Action</small>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group mb-3">
+                        <label asp-for="Category" class="form-label">Category</label>
+                        <input asp-for="Category" class="form-control" list="categories" placeholder="Enter or select category" />
+                        <datalist id="categories">
+                            @foreach (var category in ViewBag.Categories)
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </datalist>
+                        <span asp-validation-for="Category" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="col-md-12">
+                    <div class="form-group mb-3">
+                        <label asp-for="Description" class="form-label">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3" placeholder="Describe what this permission allows"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <hr />
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fa fa-arrow-left"></i> Back to List
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

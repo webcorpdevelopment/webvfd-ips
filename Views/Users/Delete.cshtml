@@ -1,0 +1,73 @@
+@model InvoiceScanner.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "Delete User";
+    ViewData["Subtitle"] = "Confirm user deletion";
+}
+
+<div class="container-fluid py-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-danger">Confirm Deletion</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <i class="fa fa-exclamation-triangle me-2"></i>
+                Are you sure you want to deactivate this user? This action can be reversed later.
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <h6 class="text-muted small">FULL NAME</h6>
+                        <p class="fs-5">@Model.Name</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted small">USERNAME</h6>
+                        <p class="fs-5">@Model.UserName</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <h6 class="text-muted small">EMAIL</h6>
+                        <p class="fs-5">@Model.Email</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted small">ROLE</h6>
+                        <p class="fs-5">
+                            @foreach (var role in Model.Roles)
+                            {
+                                <span class="badge bg-primary me-1">@role</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            @if (Model.Branch != null)
+            {
+                <div class="mb-3">
+                    <h6 class="text-muted small">BRANCH</h6>
+                    <p class="fs-5">@Model.Branch.BranchName</p>
+                </div>
+            }
+            
+            <hr class="my-4" />
+            
+            <form asp-action="Delete" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div class="d-flex">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fa fa-trash me-1"></i> Deactivate User
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary ms-2">
+                        <i class="fa fa-times me-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> 

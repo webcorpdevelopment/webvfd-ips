@@ -1,0 +1,163 @@
+@model InvoiceScanner.ViewModels.RoleViewModel
+
+<form id="editRoleForm" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="IsSystemRole" />
+    
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label">Role Name</label>
+        <input asp-for="Name" class="form-control" required />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    
+    @if (ViewBag.IsAdmin)
+    {
+        <div class="mb-3">
+            <label class="form-label">Business</label>
+            <select name="BusinessId" class="form-select">
+                <option value="">-- Global Role --</option>
+                @foreach (var business in ViewBag.Businesses)
+                {
+                    <option value="@business.Value" selected="@business.Selected">@business.Text</option>
+                }
+            </select>
+            <div class="form-text">Assign this role to a specific business or leave empty for a global role.</div>
+        </div>
+    }
+    else
+    {
+        <input type="hidden" name="BusinessId" value="@ViewBag.CurrentUserBusinessId" />
+    }
+    
+    <div class="mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0">Permissions</h5>
+            <button type="button" class="btn btn-sm btn-secondary" id="selectAllPermissions">
+                <i class="fas fa-check-square"></i> Select All Permissions
+            </button>
+        </div>
+        <p class="text-muted mb-3">Select the permissions for this role:</p>
+        
+        <div class="accordion" id="permissionsAccordion">
+            @foreach (var group in Model.AvailablePermissions.GroupBy(p => p.Category).OrderBy(g => g.Key))
+            {
+                var groupId = group.Key.Replace(" ", "").ToLower();
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading@(groupId)">
+                        <button class="accordion-button" type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#collapse@(groupId)" 
+                                aria-expanded="true" 
+                                aria-controls="collapse@(groupId)">
+                            @group.Key
+                        </button>
+                    </h2>
+                    <div id="collapse@(groupId)" class="accordion-collapse collapse show" 
+                         aria-labelledby="heading@(groupId)" 
+                         data-bs-parent="#permissionsAccordion">
+                        <div class="accordion-body">
+                            <div class="row">
+                                @foreach (var permission in group.OrderBy(p => p.Name))
+                                {
+                                    <div class="col-md-4 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input permission-checkbox" 
+                                                   type="checkbox" 
+                                                   name="SelectedPermissionIds" 
+                                                   id="permission-@permission.Id" 
+                                                   value="@permission.Id" 
+                                                   data-category="@group.Key"
+                                                   @(Model.SelectedPermissionIds.Contains(permission.Id.ToString()) ? "checked" : "") />
+                                            <label class="form-check-label" for="permission-@permission.Id">
+                                                @permission.Name
+                                                <small class="text-muted d-block">@permission.Description</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="submitEditForm()">Save Changes</button>
+    </div>
+</form>
+
+<script>
+    $(document).ready(function() {
+        // Check category checkboxes based on selected permissions
+        $('.accordion-item').each(function() {
+            var category = $(this).find('.accordion-header button').text().trim();
+            var totalPermissions = $(this).find('.permission-checkbox').length;
+            var checkedPermissions = $(this).find('.permission-checkbox:checked').length;
+            
+            // Toggle category header style if all permissions are selected
+            if (totalPermissions > 0 && totalPermissions === checkedPermissions) {
+                $(this).find('.accordion-button').addClass('fw-bold');
+            }
+        });
+        
+        // Handle permission checkbox changes
+        $('.permission-checkbox').change(function() {
+            var category = $(this).data('category');
+            var accordionItem = $(this).closest('.accordion-item');
+            var totalPermissions = accordionItem.find('.permission-checkbox').length;
+            var checkedPermissions = accordionItem.find('.permission-checkbox:checked').length;
+            
+            // Toggle category header style
+            if (totalPermissions === checkedPermissions) {
+                accordionItem.find('.accordion-button').addClass('fw-bold');
+            } else {
+                accordionItem.find('.accordion-button').removeClass('fw-bold');
+            }
+        });
+        
+        // Handle "Select All Permissions" button
+        $('#selectAllPermissions').click(function(e) {
+            e.preventDefault();
+            
+            // Call API to get all permitted permission IDs
+            $.ajax({
+                url: '@Url.Action("SelectAllPermissions", "Roles")',
+                type: 'POST',
+                success: function(response) {
+                    if (response.success) {
+                        // First uncheck all permissions
+                        $('.permission-checkbox').prop('checked', false);
+                        
+                        // Then check all available ones
+                        response.permissionIds.forEach(function(id) {
+                            $('#permission-' + id).prop('checked', true);
+                        });
+                        
+                        // Update UI for categories
+                        $('.accordion-item').each(function() {
+                            var totalPermissions = $(this).find('.permission-checkbox').length;
+                            var checkedPermissions = $(this).find('.permission-checkbox:checked').length;
+                            
+                            if (totalPermissions > 0 && totalPermissions === checkedPermissions) {
+                                $(this).find('.accordion-button').addClass('fw-bold');
+                            } else {
+                                $(this).find('.accordion-button').removeClass('fw-bold');
+                            }
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to retrieve permissions list.'
+                    });
+                }
+            });
+        });
+    });
+</script> 

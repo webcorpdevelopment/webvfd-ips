@@ -1,0 +1,502 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@inject UserManager<ApplicationUser> UserManager
+@model InvoiceScanner.Controllers.HomeReport
+
+@{
+    var user = UserManager.GetUserAsync(User).Result;
+    var roles = UserManager.GetRolesAsync(user).Result;
+    ViewData["Title"] = "Dashboard";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css">
+    <style>
+        .skeleton-loader {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 4px;
+            height: 24px;
+            width: 100%;
+        }
+        
+        @@keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+}
+
+<div id="dashboard-container" class="container-fluid">
+    <div class="row mb-3">
+        <div class="col d-flex justify-content-between align-items-center">
+            <button id="refresh-dashboard" class="btn btn-light refresh-btn ms-auto" title="Refresh Dashboard">
+                <i class="fa fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-3 row-deck">
+        @if (roles.Contains("Administrator"))
+        {
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card dashboard-card dark">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <p class="mb-0 text-white-50 small">REGISTERED COMPANIES</p>
+                                <h4 class="mb-0 fw-bold" id="business-count">@Model.BusinessCount.ToString("#,##0")</h4>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fa fa-building icon"></i>
+                            </div>
+                        </div>
+                        <i class="fa fa-building bg-icon"></i>
+                    </div>
+                </div>
+            </div>
+        }
+        
+        @if (roles.Contains("Business Administrator") || roles.Contains("Supervisor"))
+        {
+            <!-- Sales Cards Group -->
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card dashboard-card primary">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <p class="mb-0 text-white-50 small">TODAY'S SALES</p>
+                                <h4 class="mb-0 fw-bold" id="today-sales">@Model.TodaySales.ToString("#,##0.00")</h4>
+                                <span class="stat-change positive">
+                                    @{
+                                        var todayPercentage = Model.TodaySales > 0 && Model.MonthSales > 0 
+                                            ? Math.Round((Model.TodaySales / Model.MonthSales) * 100, 1) 
+                                            : 0;
+                                    }
+                                    <i class="fa fa-arrow-up"></i> @($"{todayPercentage}% of month")
+                                </span>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fa fa-shopping-cart icon"></i>
+                            </div>
+                        </div>
+                        <i class="fa fa-shopping-cart bg-icon"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card dashboard-card warning">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <p class="mb-0 text-white-50 small">ALL TIME SALES</p>
+                                <h4 class="mb-0 fw-bold" id="all-sales">@Model.AllSales.ToString("#,##0.00")</h4>
+                                <span class="stat-change">
+                                    <i class="fa fa-database"></i> Total to date
+                                </span>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fa fa-coins icon"></i>
+                            </div>
+                        </div>
+                        <i class="fa fa-coins bg-icon"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Taxes Cards Group -->
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card dashboard-card info">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <p class="mb-0 text-white-50 small">TODAY'S TAXES</p>
+                                <h4 class="mb-0 fw-bold" id="today-taxes">@Model.TodayTaxes.ToString("#,##0.00")</h4>
+                                <span class="stat-change positive">
+                                    @{
+                                        var taxPercentage = Model.TodayTaxes > 0 && Model.TodaySales > 0 
+                                            ? Math.Round((Model.TodayTaxes / Model.TodaySales) * 100, 1) 
+                                            : 0;
+                                    }
+                                    <i class="fa fa-arrow-up"></i> @($"{taxPercentage}% of sales")
+                                </span>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fa fa-percent icon"></i>
+                            </div>
+                        </div>
+                        <i class="fa fa-percent bg-icon"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card dashboard-card pink">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div>
+                                <p class="mb-0 text-white-50 small">ALL TIME TAXES</p>
+                                <h4 class="mb-0 fw-bold" id="all-taxes">@Model.AllTaxes.ToString("#,##0.00")</h4>
+                                <span class="stat-change">
+                                    @{
+                                        var allTaxPercentage = Model.AllTaxes > 0 && Model.AllSales > 0 
+                                            ? Math.Round((Model.AllTaxes / Model.AllSales) * 100, 1) 
+                                            : 0;
+                                    }
+                                    <i class="fa fa-database"></i> @($"{allTaxPercentage}% of all sales")
+                                </span>
+                            </div>
+                            <div class="ms-auto">
+                                <i class="fa fa-coins icon"></i>
+                            </div>
+                        </div>
+                        <i class="fa fa-coins bg-icon"></i>
+                    </div>
+                </div>
+            </div>
+        }
+        
+        <!-- Receipts Cards Group -->
+        <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="card dashboard-card success">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <p class="mb-0 text-white-50 small">TODAY'S RECEIPTS</p>
+                            <h4 class="mb-0 fw-bold" id="today-receipts">@Model.TodayReceipts.ToString("#,##0")</h4>
+                            <span class="stat-change positive">
+                                @{
+                                    var todayReceiptRate = Model.TodayReceipts > 0 && (Model.TodayReceipts + Model.TodayFailures) > 0 
+                                        ? Math.Round(((double)Model.TodayReceipts / (Model.TodayReceipts + Model.TodayFailures)) * 100, 1) 
+                                        : 0;
+                                }
+                                @if(Model.TodayReceipts + Model.TodayFailures > 0)
+                                {
+                                    <i class="fa fa-arrow-up"></i> @($"{todayReceiptRate}% success rate")
+                                }
+                            </span>
+                        </div>
+                        <div class="ms-auto">
+                            <i class="fa fa-receipt icon"></i>
+                        </div>
+                    </div>
+                    <i class="fa fa-receipt bg-icon"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="card dashboard-card purple">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <p class="mb-0 text-white-50 small">ALL RECEIPTS</p>
+                            <h4 class="mb-0 fw-bold" id="all-receipts">@Model.AllReceipts.ToString("#,##0")</h4>
+                            <span class="stat-change positive">
+                                @{
+                                    var allReceiptRate = Model.AllReceipts > 0 && (Model.AllReceipts + Model.AllFailures) > 0 
+                                        ? Math.Round(((double)Model.AllReceipts / (Model.AllReceipts + Model.AllFailures)) * 100, 1) 
+                                        : 0;
+                                }
+                                @if(Model.AllReceipts + Model.AllFailures > 0)
+                                {
+                                    <i class="fa fa-arrow-up"></i> @($"{allReceiptRate}% success rate")
+                                }
+                            </span>
+                        </div>
+                        <div class="ms-auto">
+                            <i class="fa fa-file-alt icon"></i>
+                        </div>
+                    </div>
+                    <i class="fa fa-file-alt bg-icon"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Failures Cards Group -->
+        <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="card dashboard-card danger">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <p class="mb-0 text-white-50 small">TODAY'S FAILURES</p>
+                            <h4 class="mb-0 fw-bold" id="today-failures">@Model.TodayFailures.ToString("#,##0")</h4>
+                            <span class="stat-change negative">
+                                @{
+                                    var todayFailureRate = 0.0;
+                                    if (Model.TodayReceipts + Model.TodayFailures > 0)
+                                    {
+                                        todayFailureRate = Math.Round(((double)Model.TodayFailures / (Model.TodayReceipts + Model.TodayFailures)) * 100, 1);
+                                    }
+                                }
+                                @if (Model.TodayReceipts + Model.TodayFailures > 0)
+                                {
+                                    <i class="fa fa-arrow-down"></i> @($"{todayFailureRate}% failure rate")
+                                }
+                                else
+                                {
+                                    <i class="fa fa-minus"></i> @($"0% failure rate")
+                                }
+                            </span>
+                        </div>
+                        <div class="ms-auto">
+                            <i class="fa fa-exclamation-triangle icon"></i>
+                        </div>
+                    </div>
+                    <i class="fa fa-exclamation-triangle bg-icon"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 col-sm-6">
+            <div class="card dashboard-card pink">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <p class="mb-0 text-white-50 small">ALL FAILURES</p>
+                            <h4 class="mb-0 fw-bold" id="all-failures">@Model.AllFailures.ToString("#,##0")</h4>
+                            <span class="stat-change negative">
+                                @{
+                                    var allFailureRate = 0.0;
+                                    if (Model.AllReceipts + Model.AllFailures > 0)
+                                    {
+                                        allFailureRate = Math.Round(((double)Model.AllFailures / (Model.AllReceipts + Model.AllFailures)) * 100, 1);
+                                    }
+                                }
+                                @if(Model.AllReceipts + Model.AllFailures > 0)
+                                {
+                                    <i class="fa fa-arrow-down"></i> @($"{allFailureRate}% failure rate")
+                                }
+                                else
+                                {
+                                    <i class="fa fa-minus"></i> @($"0% failure rate")
+                                }
+                            </span>
+                        </div>
+                        <div class="ms-auto">
+                            <i class="fa fa-ban icon"></i>
+                        </div>
+                    </div>
+                    <i class="fa fa-ban bg-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Section -->
+    @if (!roles.Contains("Administrator"))
+    {
+        <div class="row g-3 mt-2">
+            <!-- Daily Receipts Chart -->
+            <div class="col-12 col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title m-0">Daily Receipts</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 260px;">
+                            <canvas id="dailyReceiptsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Receipt Status Chart -->
+            <div class="col-12 col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title m-0">Receipt Status</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 260px;">
+                            <canvas id="receiptStatusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Sales & Taxes Chart -->
+        <div class="row g-3 mt-2">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title m-0">Monthly Sales & Taxes</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container" style="height: 260px;">
+                            <canvas id="monthlySalesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ForSave vs NotForSave Stats -->
+        <div class="row g-3 mt-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title m-0">Invoice Save Status Statistics</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="border-end p-3">
+                                    <h6 class="mb-2">Saved Invoices</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h3 class="mb-0 fw-bold text-success" id="for-save-count">@Model.ForSaveCount.ToString("#,##0")</h3>
+                                        <div class="text-success">
+                                            @{ 
+                                                var forSavePercent = (Model.ForSaveCount + Model.NotForSaveCount) > 0 
+                                                    ? Math.Round(((double)Model.ForSaveCount / (Model.ForSaveCount + Model.NotForSaveCount)) * 100, 1)
+                                                    : 0;
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="border-end p-3">
+                                    <h6 class="mb-2">For Save Total Amount</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h3 class="mb-0 fw-bold text-primary" id="for-save-sales">@Model.ForSaveSales.ToString("#,##0.00")</h3>
+                                        <div class="text-primary">
+                                            @{ 
+                                                var forSaveSalesPercent = (Model.ForSaveSales + Model.NotForSaveSales) > 0 
+                                                    ? Math.Round(((double)Model.ForSaveSales / (double)(Model.ForSaveSales + Model.NotForSaveSales)) * 100, 1)
+                                                    : 0;
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    
+
+    }
+
+    <!-- Latest Invoices -->
+   
+
+</div>
+
+@section Scripts {
+    <script src="~/js/dashboard-charts.js"></script>
+    <script>
+        // Initialize dashboard on document ready
+        $(document).ready(function() {
+            console.log("Dashboard page loaded - initializing...");
+            
+            // Fix card sizing
+            $('.dashboard-card h4').css({
+                'font-size': '1.4rem',
+                'white-space': 'nowrap',
+                'overflow': 'hidden',
+                'text-overflow': 'ellipsis'
+            });
+            
+            // Set initial empty data
+            window.dailyLabels = [];
+            window.dailyReceipts = [];
+            window.monthlySales = Array(12).fill(0);
+            window.monthlyTaxes = Array(12).fill(0);
+            window.allReceipts = 0;
+            window.allFailures = 0;
+            
+            // Initialize empty charts
+            initDashboardCharts();
+            
+            // Then load the real data
+            loadDashboardData();
+            
+            // Add refresh functionality
+            $('#refresh-dashboard').on('click', function() {
+                $(this).find('i').addClass('fa-spin');
+                loadDashboardData();
+            });
+        });
+        
+        // Function to load dashboard data
+        function loadDashboardData() {
+            const loadingStart = performance.now();
+            
+            $.ajax({
+                url: '/Home/GetDashboardData',
+                type: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(data) {
+                    console.log("Dashboard data loaded successfully:", data);
+                    
+                    // Update global variables
+                    window.dailyLabels = data.dailyLabels;
+                    window.dailyReceipts = data.dailyReceipts;
+                    window.monthlySales = data.monthlySales;
+                    window.monthlyTaxes = data.monthlyTaxes;
+                    window.allReceipts = data.allReceipts;
+                    window.allFailures = data.allFailures;
+                    
+                    // Update the dashboard with new data
+                    updateDashboardData(data);
+                    
+                    // Update charts with new data
+                    updateDashboardCharts(data);
+                    
+                    const loadingEnd = performance.now();
+                    console.log(`Dashboard data loaded in ${Math.round(loadingEnd - loadingStart)}ms`);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error loading dashboard data:", error);
+                    console.error("Response:", xhr.responseText);
+                },
+                complete: function() {
+                    $('#refresh-dashboard').find('i').removeClass('fa-spin');
+                }
+            });
+        }
+        
+        // Function to update dashboard data
+        function updateDashboardData(data) {
+            // Update statistics
+            $('#today-sales').text(formatNumber(data.todaySales));
+            $('#today-taxes').text(formatNumber(data.todayTaxes));
+            $('#month-sales').text(formatNumber(data.monthSales));
+            $('#month-taxes').text(formatNumber(data.monthTaxes));
+            $('#all-sales').text(formatNumber(data.allSales));
+            $('#all-taxes').text(formatNumber(data.allTaxes));
+            $('#today-receipts').text(formatNumber(data.todayReceipts));
+            $('#all-receipts').text(formatNumber(data.allReceipts));
+            $('#today-failures').text(formatNumber(data.todayFailures));
+            $('#all-failures').text(formatNumber(data.allFailures));
+            $('#today-pending').text(formatNumber(data.todayPending));
+            $('#all-pending').text(formatNumber(data.allPending));
+            $('#business-count').text(formatNumber(data.businessCount));
+            
+            // Update ForSave statistics
+            $('#for-save-count').text(formatNumber(data.forSaveCount));
+            $('#not-for-save-count').text(formatNumber(data.notForSaveCount));
+            $('#for-save-sales').text(formatNumber(data.forSaveSales));
+            $('#not-for-save-sales').text(formatNumber(data.notForSaveSales));
+        }
+        
+        // Format number function
+        function formatNumber(num) {
+            if (num === undefined || num === null) return "0";
+            return parseFloat(num).toLocaleString('en-US', {
+                minimumFractionDigits: typeof num === 'number' && Number.isInteger(num) ? 0 : 2,
+                maximumFractionDigits: 2
+            });
+        }
+    </script>
+}
+
+

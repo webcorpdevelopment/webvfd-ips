@@ -1,0 +1,285 @@
+﻿@model InvoiceScanner.Models.Business
+
+@{
+    ViewData["Title"] = "Edit Business";
+}
+
+
+
+<hr />
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group col-sm-12 mt-3">
+                <input type="submit" value="Save" class="btn btn-primary" />
+                <a asp-action="Index">Back to List</a>
+             
+            </div>
+            <div class="row">
+                <div class="form-group col-sm-4 mt-3">
+                    <label asp-for="Name" class="control-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-4 mt-3">
+                    <label asp-for="TIN" class="control-label"></label>
+                    <input asp-for="TIN" class="form-control" />
+                    <span asp-validation-for="TIN" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-4 mt-3">
+                    <label asp-for="VRN" class="control-label"></label>
+                    <input asp-for="VRN" class="form-control" />
+                    <span asp-validation-for="VRN" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-4 mt-3">
+                    <label asp-for="Address" class="control-label"></label>
+                    <input asp-for="Address" class="form-control" />
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-4 mt-3">
+                    <label asp-for="Phone" class="control-label"></label>
+                    <input asp-for="Phone" class="form-control" />
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-4 mt-3">
+                    <label asp-for="NumberOfUsers" class="control-label"></label>
+                    <input asp-for="NumberOfUsers" class="form-control" />
+                    <span asp-validation-for="NumberOfUsers" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-4 mt-3">
+                    <label asp-for="GatewayCompanyId" class="control-label"></label>
+                    <input asp-for="GatewayCompanyId" class="form-control" />
+                    <span asp-validation-for="GatewayCompanyId" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-4 mt-3">
+                    <label asp-for="GatewayUsername" class="control-label"></label>
+                    <input asp-for="GatewayUsername" class="form-control" />
+                    <span asp-validation-for="GatewayUsername" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-4 mt-3">
+                    <label asp-for="GatewayPassword" class="control-label"></label>
+                    <input type="password" asp-for="GatewayPassword" class="form-control" />
+                    <span asp-validation-for="GatewayPassword" class="text-danger"></span>
+                </div>
+                <div class="form-group col-sm-4 mt-3">
+                    <label asp-for="GatewaySerialNumber" class="control-label"></label>
+                    <input asp-for="GatewaySerialNumber" class="form-control" />
+                    <span asp-validation-for="GatewaySerialNumber" class="text-danger"></span>
+                </div>
+            </div>
+           
+           
+        </form>
+    </div>
+</div>
+
+<div class="row mt-3" >
+  
+
+    <div class="col-sm-12 mt-2">
+        <hr />
+
+        @*<h3>Branches</h3>*@
+        <div class="text-end">
+            <button type="button" class="btn btn-success" id="addBranchButton">
+                Add Branch
+            </button>
+        </div>
+        
+        <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th style="width:50px;text-align:center">#</th>
+                        <th>Branch Name</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (Model.Branches != null && Model.Branches.Any())
+                {
+                    int rowNumber = 1;
+                    @foreach (var branch in Model.Branches)
+                    {
+                        <tr>
+                            <td>@rowNumber </td>
+                            <td>@branch.BranchName</td>
+                            <td>
+                                <button type="button" class="btn btn-primary edit-branch-button" data-branch-id="@branch.Id" >Edit</button>
+                                <button type="button" class="btn btn-danger delete-branch-button" data-branch-id="@branch.Id">Delete</button>
+                            </td>
+                        </tr>
+
+                        rowNumber++;
+                    }
+
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="2">No branch Found</td>
+                    </tr>
+                }
+            </tbody>
+            </table>
+       
+
+      
+    </div>
+</div>
+
+
+<div class="modal" id="addBranchModal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="addBranchModalLabel">Add Branch</h4>
+                <button type="button" class="close" id="closeButton">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addBranchForm">
+                    <input type="hidden" name="BusinessId" value="@Model.Id" />
+                    <div class="form-group">
+                        <label>Branch Name</label>
+                        <input type="text" name="BranchName" id="branchNameInput" class="form-control" />
+                        <input type="hidden" name="Id" id="branchIdInput" class="form-control" />
+                    </div>
+                    <span id="modalErrorMessage" class="text-danger"></span>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelButton">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveBranchButton">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+          
+          
+            $('#addBranchModal').on('hidden.bs.modal', function () {
+                $('#addBranchForm').trigger('reset');
+                $('#branchNameError').text('');
+                $('#modalErrorMessage').text('');
+            });
+            $('#closeButton').click(function () {
+                $('#addBranchModal').modal('hide');
+            });
+            $('#cancelButton').click(function () {
+                $('#addBranchModal').modal('hide');
+            });
+
+            $("#addBranchButton").click(function () {
+                $("#addBranchModal").modal("show");
+            });
+
+            $('#saveBranchButton').click(function (e) {
+                e.preventDefault();
+                var formData = $('#addBranchForm').serialize();
+              
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("AddBranch", "Businesses")',
+                    data: formData,
+                    success: function (response) {
+                       
+                        if (response.success) {
+
+                            location.reload();
+                            //$('#addBranchModal').modal('hide');
+
+                            //// Update the branches table using JavaScript
+                            //var newRow = '<tr>' +
+                            //    '<td>' + response.branch.id + '</td>' +
+                            //    '<td>' + response.branch.branchName + '</td>' +
+                            //    '<td>' + response.branch.businessId + '</td>' +
+                            //    '</tr>';
+
+                            //$('#branchesTable tbody').append(newRow);
+                        } else {
+                            // Display the server-side error message in the modal
+                            $('#modalErrorMessage').text(response.message);
+                            if (response.errors && response.errors.length > 0) {
+                                $('#branchNameError').text(response.errors[0]);
+                            }
+                        }
+                    },
+                    error: function () {
+                     
+                        $('#modalErrorMessage').text('An error occurred while adding the branch.');
+                    }
+                });
+            });
+
+            $('.edit-branch-button').click(function () {
+              
+                var branchId = $(this).data('branch-id');
+                  console.log(branchId);
+
+                $.ajax({
+                    type: 'GET',
+                    url: '@Url.Action("GetBranchDetails", "Businesses")',
+                    data: { id: branchId },
+                    success: function (response) {
+                        
+                        if(response.success){
+                            $('#branchIdInput').val(response.branch.id);
+                            $('#branchNameInput').val(response.branch.branchName);
+
+                            $('#addBranchModal').modal('show');
+                        }
+                        else{
+                            alert(response.message);
+                        }
+                       
+                    },
+                    error: function () {
+                        alert('An error occurred while retrieving branch details.');
+                    }
+                });
+            });
+
+            $('.delete-branch-button').click(function () {
+                var branchId = $(this).data('branch-id');
+
+                // Prompt the user for confirmation
+                if (confirm('Are you sure you want to delete this branch?')) {
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("DeleteBranch", "Businesses")',
+                        data: { id: branchId },
+                        success: function (response) {
+                            if (response.success) {
+                                location.reload();
+                            } else {
+                                alert('Failed to delete branch. Please try again.');
+                            }
+                        },
+                        error: function () {
+                            alert('An error occurred while deleting the branch.');
+                        }
+                    });
+                }
+            });
+
+
+        });
+
+        const passwordInput = document.getElementById("passwordInput");
+        const maskedValue = "*".repeat(passwordInput.length);
+        passwordInput.value = maskedValue;
+    </script>
+}

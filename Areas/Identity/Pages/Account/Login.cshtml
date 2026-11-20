@@ -1,0 +1,234 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Sign in";
+    Layout = "_AuthLayout";
+}
+
+<div class="text-center mb-5">
+    <h2 class="fw-bold mb-0">Welcome back</h2>
+    <p class="text-muted">Please sign in to continue</p>
+</div>
+
+<div id="login-alert" class="alert alert-danger d-none" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <span id="error-message">Invalid login attempt</span>
+</div>
+
+<!-- Form -->
+<form id="loginForm" method="post" class="needs-validation" novalidate>
+    <div asp-validation-summary="ModelOnly" class="text-danger d-none" role="alert"></div>
+    
+    <div class="form-floating mb-3">
+        <input asp-for="Input.Username" class="form-control" placeholder="Username" autocomplete="username" required />
+        <label asp-for="Input.Username">Username</label>
+        <div class="invalid-feedback">Please enter your username</div>
+        <span asp-validation-for="Input.Username" class="text-danger"></span>
+    </div>
+    
+    <div class="form-floating mb-3 password-container">
+        <input asp-for="Input.Password" class="form-control" placeholder="Password" autocomplete="current-password" required />
+        <label asp-for="Input.Password">Password</label>
+        <span class="password-toggle" onclick="togglePassword()">
+            <i class="bi bi-eye"></i>
+        </span>
+        <div class="invalid-feedback">Please enter your password</div>
+        <span asp-validation-for="Input.Password" class="text-danger"></span>
+    </div>
+    
+    <div class="form-check mb-3">
+        <input class="form-check-input" asp-for="Input.RememberMe" />
+        <label class="form-check-label" asp-for="Input.RememberMe">Remember me</label>
+    </div>
+    
+    <div class="d-grid gap-2">
+        <button id="login-button" type="submit" class="btn btn-primary btn-lg">
+            <span class="spinner-border spinner-border-sm d-none me-2" role="status" aria-hidden="true" id="login-spinner"></span>
+            Sign in
+        </button>
+    </div>
+</form>
+<!-- End Form -->
+
+<!-- Lock Screen Modal -->
+<div class="modal fade" id="lockScreenModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="lockScreenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title w-100 text-center" id="lockScreenModalLabel">Session Locked</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="lock-icon mb-4">
+                    <i class="bi bi-lock-fill display-1 text-primary"></i>
+                </div>
+                <p class="mb-4">Your session has been locked due to inactivity</p>
+                <div class="form-floating mb-3">
+                    <input type="password" class="form-control" id="unlockPassword" placeholder="Password">
+                    <label for="unlockPassword">Enter password to unlock</label>
+                </div>
+                <button type="button" class="btn btn-primary" id="unlockButton">
+                    <span class="spinner-border spinner-border-sm d-none me-2" role="status" aria-hidden="true" id="unlock-spinner"></span>
+                    Unlock
+                </button>
+                <button type="button" class="btn btn-outline-secondary ms-2" id="logoutButton">Logout</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="loginToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto" id="toast-title">Success</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toast-message">
+            Login successful! Redirecting...
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .password-container {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .lock-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f1f5ff;
+            border-radius: 50%;
+        }
+        
+        #loginForm {
+            max-width: 100%;
+        }
+        
+        .btn-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Display validation errors as an alert
+        $(document).ready(function() {
+            // Check if there are validation errors
+            var validationSummary = $('.validation-summary-errors');
+            if (validationSummary.length > 0) {
+                var errorMessage = $(".validation-summary-errors ul li").first().text();
+                $("#error-message").text(errorMessage || "Invalid login attempt");
+                $("#login-alert").removeClass("d-none");
+            }
+            
+            // Form submission with loading indicator
+            $("#loginForm").on("submit", function() {
+                if (this.checkValidity()) {
+                    $("#login-spinner").removeClass("d-none");
+                    $("#login-button").prop("disabled", true);
+                }
+            });
+            
+            // Session timeout handler
+            setupSessionTimeout();
+        });
+        
+        // Toggle password visibility
+        function togglePassword() {
+            var passwordInput = document.getElementById("Input_Password");
+            var icon = document.querySelector(".password-toggle i");
+            
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                icon.classList.remove("bi-eye");
+                icon.classList.add("bi-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                icon.classList.remove("bi-eye-slash");
+                icon.classList.add("bi-eye");
+            }
+        }
+        
+        // Session timeout handling
+        function setupSessionTimeout() {
+            var idleTime = 0;
+            var idleInterval = 60000; // 1 minute
+            var timeout = 20; // 20 minutes
+            
+            // Reset timer on user activity
+            $(document).on("mousemove keypress click", function() {
+                idleTime = 0;
+            });
+            
+            // Check idle time
+            setInterval(function() {
+                idleTime += 1;
+                // Lock screen after timeout
+                if (idleTime >= timeout) {
+                    lockScreen();
+                }
+            }, idleInterval);
+        }
+        
+        // Lock screen function
+        function lockScreen() {
+            var modal = new bootstrap.Modal(document.getElementById('lockScreenModal'));
+            modal.show();
+            
+            // Handle unlock button
+            $("#unlockButton").on("click", function() {
+                var password = $("#unlockPassword").val();
+                if (password) {
+                    $("#unlock-spinner").removeClass("d-none");
+                    $(this).prop("disabled", true);
+                    
+                    // You'll need to implement a server-side endpoint to verify the password
+                    // For now, we'll just reload the page which will redirect to login if session expired
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                }
+            });
+            
+            // Handle logout button
+            $("#logoutButton").on("click", function() {
+                window.location.href = "/Identity/Account/Logout";
+            });
+        }
+        
+        // Show success toast
+        function showToast(title, message, isSuccess = true) {
+            $("#toast-title").text(title);
+            $("#toast-message").text(message);
+            
+            const toastEl = document.getElementById('loginToast');
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+    </script>
+}

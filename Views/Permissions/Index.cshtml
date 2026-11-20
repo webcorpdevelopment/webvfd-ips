@@ -1,0 +1,382 @@
+@model IEnumerable<InvoiceScanner.Models.Permission>
+
+@{
+    ViewData["Title"] = "Permission Management";
+}
+
+<div class="container-fluid">
+    <div class="card card-border">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold">Available Permissions</h6>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createPermissionModal">
+                <i class="fas fa-plus"></i> Create New
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <form asp-action="Index" method="get" class="row g-2">
+                        <div class="col-md-4">
+                            <select name="categoryFilter" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Categories</option>
+                                @foreach (var category in ViewBag.Categories)
+                                {
+                                    <option value="@category" selected="@(ViewData["CategoryFilter"]?.ToString() == category)">@category</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" placeholder="Search permissions...">
+                                <button type="submit" class="btn btn-outline-secondary">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="permissionsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th width="140px" class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Name</td>
+                                <td><span class="badge bg-primary">@item.Category</span></td>
+                                <td>@item.Description</td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                onclick="loadPermissionDetails('@item.Id', 'details')" 
+                                                data-bs-toggle="tooltip" title="Details">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                onclick="loadPermissionDetails('@item.Id', 'edit')" 
+                                                data-bs-toggle="tooltip" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                onclick="confirmDelete('@item.Id', '@item.Name')" 
+                                                data-bs-toggle="tooltip" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Permission Modal -->
+<div class="modal fade" id="createPermissionModal" tabindex="-1" aria-labelledby="createPermissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createPermissionModalLabel">Create New Permission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createPermissionForm" asp-action="Create" method="post">
+                    <div class="mb-3">
+                        <label for="createName" class="form-label">Permission Name</label>
+                        <input type="text" class="form-control" id="createName" name="Name" required placeholder="Enter permission name">
+                        <small class="form-text text-muted">Example: Module.Action</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="createCategory" class="form-label">Category</label>
+                        <input type="text" class="form-control" id="createCategory" name="Category" required list="categoriesList" placeholder="Enter or select category">
+                        <datalist id="categoriesList">
+                            @foreach (var category in ViewBag.Categories)
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </datalist>
+                    </div>
+                    <div class="mb-3">
+                        <label for="createDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="createDescription" name="Description" rows="3" placeholder="Describe what this permission allows"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitCreateForm()">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Permission Modal -->
+<div class="modal fade" id="editPermissionModal" tabindex="-1" aria-labelledby="editPermissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPermissionModalLabel">Edit Permission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="editModalContent">
+                    <!-- Content will be loaded dynamically -->
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Permission Modal -->
+<div class="modal fade" id="detailsPermissionModal" tabindex="-1" aria-labelledby="detailsPermissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsPermissionModalLabel">Permission Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detailsModalContent">
+                    <!-- Content will be loaded dynamically -->
+                    <div class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Include SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#permissionsTable').DataTable({
+                responsive: true,
+                columnDefs: [
+                    { orderable: false, targets: 3 }
+                ],
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>><"table-responsive"t><"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search permissions..."
+                }
+            });
+            
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+        
+        // Submit create form with AJAX
+        function submitCreateForm() {
+            var form = $('#createPermissionForm');
+            
+            $.ajax({
+                url: '@Url.Action("Create", "Permissions")',
+                type: 'POST',
+                data: form.serialize(),
+                beforeSend: function() {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Creating permission...',
+                        html: 'Please wait...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                },
+                success: function(response) {
+                    // Check if the response contains success flag
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Permission created successfully',
+                            timer: 1500
+                        }).then(function() {
+                            // Refresh the page or update the table
+                            location.reload();
+                        });
+                    } else {
+                        // Handle validation errors or other issues
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to create permission'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred. Please try again.'
+                    });
+                }
+            });
+        }
+        
+        // Load permission details for edit or view
+        function loadPermissionDetails(id, mode) {
+            var url = mode === 'edit' 
+                ? '@Url.Action("GetEditForm", "Permissions")/' + id
+                : '@Url.Action("GetDetails", "Permissions")/' + id;
+                
+            var modalId = mode === 'edit' ? '#editPermissionModal' : '#detailsPermissionModal';
+            var contentId = mode === 'edit' ? '#editModalContent' : '#detailsModalContent';
+            
+            $.ajax({
+                url: url,
+                type: 'GET',
+                beforeSend: function() {
+                    $(contentId).html('<div class="text-center p-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+                    $(modalId).modal('show');
+                },
+                success: function(response) {
+                    $(contentId).html(response);
+                },
+                error: function() {
+                    $(contentId).html('<div class="alert alert-danger">Failed to load permission details.</div>');
+                }
+            });
+        }
+        
+        // Submit edit form with AJAX
+        function submitEditForm() {
+            var form = $('#editPermissionForm');
+            
+            $.ajax({
+                url: '@Url.Action("Edit", "Permissions")',
+                type: 'POST',
+                data: form.serialize(),
+                beforeSend: function() {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Updating permission...',
+                        html: 'Please wait...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                },
+                success: function(response) {
+                    // Check if the response contains success flag
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Permission updated successfully',
+                            timer: 1500
+                        }).then(function() {
+                            // Refresh the page or update the table
+                            location.reload();
+                        });
+                    } else {
+                        // Handle validation errors or other issues
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Failed to update permission'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred. Please try again.'
+                    });
+                }
+            });
+        }
+        
+        // Confirm delete with SweetAlert
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'Are you sure?',
+                html: `Do you want to delete permission <strong>${name}</strong>?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    deletePermission(id);
+                }
+            });
+        }
+        
+        // Delete permission with AJAX
+        function deletePermission(id) {
+            $.ajax({
+                url: '@Url.Action("Delete", "Permissions")/' + id,
+                type: 'POST',
+                data: { "__RequestVerificationToken": $('input[name="__RequestVerificationToken"]').val() },
+                beforeSend: function() {
+                    // Show loading
+                    Swal.fire({
+                        title: 'Deleting permission...',
+                        html: 'Please wait...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: 'Permission has been deleted.',
+                            timer: 1500
+                        }).then(function() {
+                            // Refresh the page
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Cannot Delete',
+                            text: response.message || 'This permission is in use and cannot be deleted.'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred. Please try again.'
+                    });
+                }
+            });
+        }
+    </script>
+} 

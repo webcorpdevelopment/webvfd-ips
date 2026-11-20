@@ -1,0 +1,148 @@
+﻿@model CompanySetting
+
+<h2>Company Settings</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert">
+        @TempData["SuccessMessage"]
+    </div>
+}
+<form asp-action="Save" method="post">
+    <div class="row">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+        <div class="form-group col-sm-6 mt-3">
+            <label asp-for="ExchangeRate">Exchange Rate For Vertical USD (TZS):</label>
+            <input asp-for="ExchangeRate" min="0" class="form-control" />
+            <input asp-for="Id" type="hidden" class="form-control" />
+            <span asp-validation-for="ExchangeRate" class="text-danger"></span>
+        </div>
+        <div class="form-group col-sm-6 mt-3">
+            <label asp-for="HorizontalExchangeRate">Exchange Rate For Horizontal USD (TZS):</label>
+            <input asp-for="HorizontalExchangeRate" min="0" class="form-control" />
+            <span asp-validation-for="HorizontalExchangeRate" class="text-danger"></span>
+        </div>
+        <div class="form-group col-sm-6 mt-3">
+            <label asp-for="ExchangeRateEUR">Exchange Rate For EUR (TZS):</label>
+            <input asp-for="ExchangeRateEUR" min="0" class="form-control" />
+            <input asp-for="Id" type="hidden" class="form-control" />
+            <span asp-validation-for="ExchangeRateEUR" class="text-danger"></span>
+        </div>
+
+        <div class="form-group col-sm-6 mt-3">
+            <label asp-for="Provider">Email Provider:</label>
+            <select asp-for="Provider" class="form-control">
+                <option value="Default">Default</option>
+                <option value="SMTP">SMTP</option>
+                <option value="Mailgun">Mailgun</option>
+            </select>
+            <span asp-validation-for="Provider" class="text-danger"></span>
+        </div>
+
+        <div class="form-group col-sm-6 mt-3">
+            <label asp-for="CompanyName">Display Name:</label>
+            <input asp-for="CompanyName" class="form-control" />
+            <span asp-validation-for="CompanyName" class="text-danger"></span>
+        </div>
+        <!-- SMTP Settings -->
+        <div class="smtp-settings form-group col-sm-6 mt-3">
+            <label asp-for="SmtpHost">SMTP Host:</label>
+            <input asp-for="SmtpHost" class="form-control" />
+            <span asp-validation-for="SmtpHost" class="text-danger"></span>
+        </div>
+        <div class="smtp-settings form-group col-sm-6 mt-3">
+            <label asp-for="SmtpPort">SMTP Port:</label>
+            <input asp-for="SmtpPort" class="form-control" />
+            <span asp-validation-for="SmtpPort" class="text-danger"></span>
+        </div>
+        <div class="smtp-settings form-group col-sm-6 mt-3">
+            <label asp-for="SmtpUsername">SMTP Username:</label>
+            <input asp-for="SmtpUsername" class="form-control" />
+            <span asp-validation-for="SmtpUsername" class="text-danger"></span>
+        </div>
+        <div class="smtp-settings form-group col-sm-6 mt-3">
+            <label asp-for="SmtpPassword">SMTP Password:</label>
+            <input asp-for="SmtpPassword"  class="form-control" />
+            <span asp-validation-for="SmtpPassword" class="text-danger"></span>
+        </div>
+        <div class="smtp-settings form-group col-sm-6 mt-3">
+            <div class="form-group mt-3">
+                <input asp-for="EnableSsl" style="width:35px;height:35px" class="form-check-input" type="checkbox" />
+                <label class="form-check-label mt-2" asp-for="EnableSsl">Enable SSL:</label>
+
+            <span asp-validation-for="EnableSsl" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="smtp-settings form-group col-sm-6 mt-3">
+            <label asp-for="DefaultSenderEmail" >Default Sender Email:</label>
+            <input asp-for="DefaultSenderEmail" class="form-control" />
+            <span asp-validation-for="DefaultSenderEmail" class="text-danger"></span>
+        </div>
+
+        <!-- Mailgun Settings -->
+        <div class="mailgun-settings form-group col-sm-6 mt-3">
+            <label asp-for="MailgunBaseUrl">Mailgun BaseUrl:</label>
+            <input asp-for="MailgunBaseUrl" class="form-control" />
+            <span asp-validation-for="MailgunBaseUrl" class="text-danger"></span>
+        </div>
+        <div class="mailgun-settings form-group col-sm-6 mt-3">
+            <label asp-for="MailgunApiKey">Mailgun Api Key:</label>
+            <input asp-for="MailgunApiKey" class="form-control" />
+            <span asp-validation-for="MailgunApiKey" class="text-danger"></span>
+        </div>
+
+        <div class="mailgun-settings form-group col-sm-6 mt-3">
+            <label asp-for="EmailFrom">Email From:</label>
+            <input asp-for="EmailFrom" class="form-control" />
+            <span asp-validation-for="EmailFrom" class="text-danger"></span>
+        </div>
+      
+        <div class="mailgun-settings form-group col-sm-6 mt-3">
+            <label asp-for="MailgunDomain">Mailgun Domain:</label>
+            <input asp-for="MailgunDomain" class="form-control" />
+            <span asp-validation-for="MailgunDomain" class="text-danger"></span>
+        </div>
+
+        <div class="mailgun-settings form-group col-sm-6 mt-3">
+            <label asp-for="MailgunEndPoint">Mailgun EndPoint:</label>
+            <input asp-for="MailgunEndPoint" class="form-control" />
+            <span asp-validation-for="MailgunEndPoint" class="text-danger"></span>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary mt-3">Save</button>
+</form>
+
+
+
+@section Scripts {
+    <!-- Sweet Alerts js -->
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+        $(document).ready(function () {
+            $('#Provider').change(function () {
+                var selectedProvider = $(this).val();
+                if (selectedProvider === 'SMTP') {
+                    $('.smtp-settings').show();
+                    $('.mailgun-settings').hide();
+                } else if (selectedProvider === 'Mailgun') {
+                    $('.smtp-settings').hide();
+                    $('.mailgun-settings').show();
+                } else {
+                    $('.smtp-settings').hide();
+                    $('.mailgun-settings').hide();
+                }
+            });
+
+            $('#Provider').trigger('change');
+
+            $(document).on('change', '.form-control[type="checkbox"]', function () {
+                var checkbox = $(this);
+                var isChecked = checkbox.is(':checked');
+                checkbox.val(isChecked);
+            });
+        });
+</script>
+
+        }

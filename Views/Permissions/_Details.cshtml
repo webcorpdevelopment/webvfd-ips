@@ -1,0 +1,44 @@
+@model InvoiceScanner.Models.Permission
+
+<dl class="row">
+    <dt class="col-sm-4">Name:</dt>
+    <dd class="col-sm-8">@Model.Name</dd>
+    
+    <dt class="col-sm-4">Category:</dt>
+    <dd class="col-sm-8"><span class="badge bg-primary">@Model.Category</span></dd>
+    
+    <dt class="col-sm-4">Description:</dt>
+    <dd class="col-sm-8">@Model.Description</dd>
+</dl>
+
+@if (ViewBag.RolesWithPermission != null && ViewBag.RolesWithPermission.Count > 0)
+{
+    <div class="mt-4">
+        <h6 class="mb-2">Roles with this Permission:</h6>
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var role in ViewBag.RolesWithPermission)
+            {
+                <span class="badge bg-success">@role</span>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="mt-4">
+        <h6 class="mb-2">Roles with this Permission:</h6>
+        <p class="text-muted fst-italic">No roles have been assigned this permission.</p>
+    </div>
+}
+
+<div class="d-flex justify-content-between mt-4">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <div>
+        <button type="button" class="btn btn-primary" onclick="loadPermissionDetails('@Model.Id', 'edit')">
+            <i class="fas fa-edit"></i> Edit
+        </button>
+        <button type="button" class="btn btn-danger" onclick="confirmDelete('@Model.Id', '@Model.Name')">
+            <i class="fas fa-trash"></i> Delete
+        </button>
+    </div>
+</div> 

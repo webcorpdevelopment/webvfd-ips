@@ -1,0 +1,1470 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using InvoiceScanner.Services
+@inject UserManager<ApplicationUser> UserManager
+@inject IPermissionService PermissionService
+
+@{
+    var user = UserManager.GetUserAsync(User).Result;
+    var roles = UserManager.GetRolesAsync(user).Result;
+    
+    var hasViewDashboardPermission = await PermissionService.UserHasPermissionAsync("Dashboard.View");
+    var hasUploadInvoicesPermission = await PermissionService.UserHasPermissionAsync("Invoice.Create");
+    var hasViewInvoicesPermission = await PermissionService.UserHasPermissionAsync("Invoice.View");
+    var hasZReportPermission = await PermissionService.UserHasPermissionAsync("Invoice.ZReport");
+    var hasReportViewPermission = await PermissionService.UserHasPermissionAsync("Report.View");
+    var hasViewBusinessesPermission = await PermissionService.UserHasPermissionAsync("Business.View");
+    var hasViewUsersPermission = await PermissionService.UserHasPermissionAsync("User.View");
+    var hasViewLogsPermission = await PermissionService.UserHasPermissionAsync("System.View");
+    var hasViewCompanySettingsPermission = await PermissionService.UserHasPermissionAsync("CompanySetting.View");
+    var hasViewExchangeRatePermission = await PermissionService.UserHasPermissionAsync("ExchangeRate.View");
+    var hasManagePermissionsPermission = await PermissionService.UserHasPermissionAsync("Permission.Manage");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Invoice validation gateway">
+    <meta name="keyword" content="efd, vfd, tra, invoice, tanzania, receipt">
+    <link rel="icon" href="assets/img/favicon.ico" type="image/x-icon"> <!-- Favicon-->
+    <title>@ViewData["Title"] - WebVFD IPS</title>
+    <!-- Application vendor css url -->
+
+    <!-- Application vendor css url -->
+    <link rel="stylesheet" href="~/luno/assets/cssbundle/dataTables.min.css">
+
+    <!-- project css file  -->
+    <link rel="stylesheet" href="~/luno/assets/css/luno-style.css">
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Jquery Core Js -->
+    <script src="~/luno/assets/js/plugins.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body class="layout-1" data-luno="theme-blue">
+    <!-- start: sidebar -->
+    <div class="sidebar p-2 py-md-3 @@cardClass dark">
+        <div class="container-fluid">
+            <!-- sidebar: title-->
+            <div class="title-text d-flex align-items-center mb-4 mt-1">
+                <h4 class="sidebar-title mb-0 flex-grow-1"><span class="sm-txt">WebVFD  </span><span>IPS</span></h4>
+            </div>
+            <!-- sidebar: menu list -->
+            <div class="main-menu flex-grow-1">
+
+                <ul class="menu-list">
+                    <li class="divider py-2 lh-sm"><span class="small text-white">MAIN</span></li>
+                    @if (hasViewDashboardPermission)
+                    {
+                        <li class="collapsed">
+                            <a class="m-link" asp-controller="Home" asp-action="Index">
+                                <i class="fa fa-home"></i>
+                                <span class="ms-2">Dashboard</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+
+                @if (!roles.Contains("Administrator"))
+                {
+                    <ul class="menu-list">
+                        <li class="divider py-2 lh-sm"><span class="small text-white">SALES</span></li>
+                        @if (hasUploadInvoicesPermission)
+                        {
+                            <li class="collapsed">
+                                <a class="m-link" asp-controller="Invoices" asp-action="Upload">
+                                    <i class="fa fa-upload"></i>
+                                    <span class="ms-2">Upload invoices</span>
+                                </a>
+                            </li>
+                        }
+                        @if (hasViewInvoicesPermission)
+                        {
+                            <li class="collapsed">
+                                <a class="m-link" asp-controller="Invoices" asp-action="Index">
+                                    <i class="fa fa-file"></i>
+                                    <span class="ms-2">Invoices</span>
+                                </a>
+                            </li>
+                            
+                            <li class="collapsed">
+                                <a class="m-link" asp-controller="Invoices" asp-action="InvoiceStore">
+                                    <i class="fa fa-store"></i>
+                                    <span class="ms-2">Invoice Store</span>
+                                </a>
+                            </li>
+                        }
+                        @if (hasZReportPermission)
+                        {
+                            <li class="collapsed">
+                                <a class="m-link" asp-controller="Invoices" asp-action="SelectDate">
+                                    <i class="fa fa-bar-chart-o"></i>
+                                    <span class="ms-2">Z Report</span>
+                                </a>
+                            </li>
+                            <li class="collapsed">
+                                <a class="m-link" asp-controller="Invoices" asp-action="SelectDates">
+                                    <i class="fa fa-list-alt"></i>
+                                    <span class="ms-2">Z Report Summary</span>
+                                </a>
+                            </li>
+                        }
+                        @if (hasReportViewPermission)
+                        {
+                            <li class="collapsed">
+                                <a class="m-link" asp-controller="Report" asp-action="Index">
+                                    <i class="fa fa-bar-chart-o"></i>
+                                    <span class="ms-2">Sales Report</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+
+                @if (hasViewBusinessesPermission && !roles.Contains("Administrator"))
+                {
+                    <ul class="menu-list">
+                        <li class="divider py-2 lh-sm"><span class="small text-white">SETUP</span></li>
+                        <li class="collapsed">
+                            <a class="m-link" asp-controller="Businesses" asp-action="Index">
+                                <i class="fa fa-bookmark-o"></i>
+                                <span class="ms-2">Businesses</span>
+                            </a>
+                        </li>
+                    </ul>
+                }
+                
+                @if (hasViewUsersPermission)
+                {
+                    <ul class="menu-list">
+                        <a class="m-link" asp-controller="Users" asp-action="Index">
+                            <i class="fa fa-users"></i>
+                            <span class="ms-2">Users</span>
+                        </a>
+                    </ul>
+                }
+
+                <ul class="menu-list">
+                    <li class="divider py-2 lh-sm"><span class="small text-white">ADMINISTRATION</span></li>
+                   
+                        <li class="collapsed">
+                            <a class="m-link" asp-controller="Logs" asp-action="Index">
+                                <i class="fa fa-list"></i>
+                                <span class="ms-2">Logs</span>
+                            </a>
+                        </li>
+                    
+                    
+                    @if (hasManagePermissionsPermission)
+                    {
+                        <li class="collapsed">
+                            <a class="m-link" asp-controller="Roles" asp-action="Index">
+                                <i class="fa fa-lock"></i>
+                                <span class="ms-2">Roles</span>
+                            </a>
+                        </li>
+                    }
+                    
+                    @if (roles.Contains("Administrator"))
+                    {
+                        <li class="collapsed">
+                            <a class="m-link" asp-controller="Settings" asp-action="Index">
+                                <i class="fa fa-cogs"></i>
+                                <span class="ms-2">Settings</span>
+                            </a>
+                        </li>
+                    }
+                    
+                    @if (hasViewCompanySettingsPermission && user.BusinessId.HasValue)
+                    {
+                        <li class="collapsed">
+                            <a class="m-link" asp-controller="CompanySetting" asp-action="Index">
+                                <i class="fa fa-list-alt"></i>
+                                <span class="ms-2">Company Settings</span>
+                            </a>
+                        </li>
+                    }
+                    
+                    <!-- @if (hasViewExchangeRatePermission && !roles.Contains("Administrator") && !roles.Contains("Business Administrator"))
+                    {
+                        <li class="collapsed">
+                            <a class="m-link" asp-controller="ExchangeRate" asp-action="Index">
+                                <i class="fa fa-list-alt"></i>
+                                <span class="ms-2">Exchange Rates</span>
+                            </a>
+                        </li>
+                    } -->
+                </ul>
+            </div>
+            <!-- sidebar: footer link -->
+        </div>
+    </div>
+    <!-- start: body area -->
+    <div class="wrapper">
+        <!-- start: page header -->
+        <header class="page-header sticky-top px-xl-4 px-sm-2 px-0 py-lg-2 py-1">
+            <div class="container-fluid">
+                <nav class="navbar">
+                    <!-- start: toggle btn -->
+                    <div class="d-flex">
+                        <button type="button" class="btn btn-link d-none d-xl-block sidebar-mini-btn p-0 text-primary">
+                            <span class="hamburger-icon">
+                                <span class="line"></span>
+                                <span class="line"></span>
+                                <span class="line"></span>
+                            </span>
+                        </button>
+                        <button type="button" class="btn btn-link d-block d-xl-none menu-toggle p-0 text-primary">
+                            <span class="hamburger-icon">
+                                <span class="line"></span>
+                                <span class="line"></span>
+                                <span class="line"></span>
+                            </span>
+                        </button>
+                        @*<a href="index.html" class="brand-icon d-flex align-items-center mx-2 mx-sm-3 text-primary">
+                            <img src="~/img/logo.png" height="32" />
+                            </a>*@
+                    </div>
+                    <!-- start: link -->
+                    <ul class="header-right justify-content-end d-flex align-items-center mb-0">
+                        <!-- start: full screen toggle -->
+                        <li class="d-none d-xl-inline-block">
+                            <a class="nav-link fullscreen" href="javascript:void(0);" onclick="toggleFullScreen(documentElement)">
+                                <svg viewBox="0 0 16 16" width="18px" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M5.8279 10.172C5.73414 10.0783 5.60698 10.0256 5.4744 10.0256C5.34182 10.0256 5.21467 10.0783 5.1209 10.172L1.0249 14.268V11.5C1.0249 11.3674 0.972224 11.2402 0.878456 11.1464C0.784688 11.0527 0.657511 11 0.524902 11C0.392294 11 0.265117 11.0527 0.171349 11.1464C0.0775808 11.2402 0.0249023 11.3674 0.0249023 11.5V15.475C0.0249023 15.6076 0.0775808 15.7348 0.171349 15.8285C0.265117 15.9223 0.392294 15.975 0.524902 15.975H4.4999C4.63251 15.975 4.75969 15.9223 4.85346 15.8285C4.94722 15.7348 4.9999 15.6076 4.9999 15.475C4.9999 15.3424 4.94722 15.2152 4.85346 15.1214C4.75969 15.0277 4.63251 14.975 4.4999 14.975H1.7319L5.8279 10.879C5.92164 10.7852 5.9743 10.6581 5.9743 10.5255C5.9743 10.3929 5.92164 10.2658 5.8279 10.172ZM10.1719 10.172C10.2657 10.0783 10.3928 10.0256 10.5254 10.0256C10.658 10.0256 10.7851 10.0783 10.8789 10.172L14.9749 14.268V11.5C14.9749 11.3674 15.0276 11.2402 15.1213 11.1464C15.2151 11.0527 15.3423 11 15.4749 11C15.6075 11 15.7347 11.0527 15.8285 11.1464C15.9222 11.2402 15.9749 11.3674 15.9749 11.5V15.475C15.9749 15.6076 15.9222 15.7348 15.8285 15.8285C15.7347 15.9223 15.6075 15.975 15.4749 15.975H11.4999C11.3673 15.975 11.2401 15.9223 11.1463 15.8285C11.0526 15.7348 10.9999 15.6076 10.9999 15.475C10.9999 15.3424 11.0526 15.2152 11.1463 15.1214C11.2401 15.0277 11.3673 14.975 11.4999 14.975H14.2679L10.1719 10.879C10.0782 10.7852 10.0255 10.6581 10.0255 10.5255C10.0255 10.3929 10.0782 10.2658 10.1719 10.172ZM5.8279 5.82799C5.73414 5.92173 5.60698 5.97439 5.4744 5.97439C5.34182 5.97439 5.21467 5.92173 5.1209 5.82799L1.0249 1.73199V4.49999C1.0249 4.6326 0.972224 4.75978 0.878456 4.85355C0.784688 4.94732 0.657511 4.99999 0.524902 4.99999C0.392294 4.99999 0.265117 4.94732 0.171349 4.85355C0.0775808 4.75978 0.0249023 4.6326 0.0249023 4.49999V0.524994C0.0249023 0.392386 0.0775808 0.265209 0.171349 0.17144C0.265117 0.0776723 0.392294 0.0249939 0.524902 0.0249939H4.4999C4.63251 0.0249939 4.75969 0.0776723 4.85346 0.17144C4.94722 0.265209 4.9999 0.392386 4.9999 0.524994C4.9999 0.657602 4.94722 0.784779 4.85346 0.878547C4.75969 0.972315 4.63251 1.02499 4.4999 1.02499H1.7319L5.8279 5.12099C5.92164 5.21476 5.9743 5.34191 5.9743 5.47449C5.9743 5.60708 5.92164 5.73423 5.8279 5.82799Z" />
+                                    <path class="fill-secondary" d="M10.5253 5.97439C10.3927 5.97439 10.2655 5.92173 10.1718 5.82799C10.078 5.73423 10.0254 5.60708 10.0254 5.47449C10.0254 5.34191 10.078 5.21476 10.1718 5.12099L14.2678 1.02499H11.4998C11.3672 1.02499 11.24 0.972315 11.1462 0.878547C11.0525 0.784779 10.9998 0.657602 10.9998 0.524994C10.9998 0.392386 11.0525 0.265209 11.1462 0.17144C11.24 0.0776723 11.3672 0.0249939 11.4998 0.0249939H15.4748C15.6074 0.0249939 15.7346 0.0776723 15.8283 0.17144C15.9221 0.265209 15.9748 0.392386 15.9748 0.524994V4.49999C15.9748 4.6326 15.9221 4.75978 15.8283 4.85355C15.7346 4.94732 15.6074 4.99999 15.4748 4.99999C15.3422 4.99999 15.215 4.94732 15.1212 4.85355C15.0275 4.75978 14.9748 4.6326 14.9748 4.49999V1.73199L10.8788 5.82799C10.785 5.92173 10.6579 5.97439 10.5253 5.97439Z" />
+                                </svg>
+                            </a>
+                        </li>
+
+                        <!-- start: User dropdown-menu -->
+                        <li>
+                            <div class="dropdown morphing scale-left user-profile mx-lg-3 mx-2">
+                                <a class="nav-link dropdown-toggle rounded-circle after-none p-0" href="#" role="button" data-bs-toggle="dropdown">
+                                    <img class="avatar img-thumbnail rounded-circle shadow" src="~/img/avatar.jpg" alt="">
+                                </a>
+                                <div class="dropdown-menu border-0 rounded-4 shadow p-0">
+                                    <div class="card border-0 w240">
+                                        <div class="card-body border-bottom d-flex">
+                                            <img class="avatar rounded-circle" src="~/img/avatar.jpg" alt="">
+                                            <div class="flex-fill ms-3">
+                                                <h6 class="card-title mb-0">@user.Name</h6>
+                                                <span class="text-muted">@user.Email</span>
+                                                <b>@string.Join(", ", roles)</b>
+                                            </div>
+                                        </div>
+                                        @*<div class="list-group m-2 mb-3">
+                                                <a class="list-group-item list-group-item-action border-0" href="page-profile.html"><i class="w30 fa fa-user"></i>My Profile</a>
+                                                <a class="list-group-item list-group-item-action border-0" href="account-settings.html"><i class="w30 fa fa-gear"></i>Settings</a>
+                                                <a class="list-group-item list-group-item-action border-0" href="account-billing.html"><i class="w30 fa fa-credit-card"></i>Billing</a>
+                                                <a class="list-group-item list-group-item-action border-0" href="page-teamsboard.html"><i class="w30 fa fa-users"></i>Manage Team</a>
+                                                <a class="list-group-item list-group-item-action border-0" href="dashboard-enevt.html"><i class="w30 fa fa-calendar"></i>My Events</a>
+                                                <a class="list-group-item list-group-item-action border-0" href="page-support-ticket.html"><i class="w30 fa fa-tag"></i>Support Ticket</a>
+                                            </div>*@
+                                        <a asp-area="Identity" asp-page="/Account/Login" class="btn bg-secondary text-light text-uppercase rounded-0">Sign out</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <!-- start: User Profile toggle modal -->
+                        <li>
+                            <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#UserProfileModal" title="User Profile">
+                                <svg viewBox="0 0 16 16" width="18px" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                                </svg>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+        <!-- start: page toolbar -->
+        <div class="page-toolbar px-xl-4 px-sm-2 px-0 py-3">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <h1 class="fs-5 color-900 mt-1 mb-0 text-uppercase">@ViewData["Title"]</h1>
+                        <small class="text-muted">@ViewData["Subtitle"]</small>
+                    </div>
+                </div> <!-- .row end -->
+            </div>
+        </div>
+        <!-- Body: Body -->
+        <div class="page-body px-xl-4 px-sm-2 px-0 py-lg-2 py-1 mt-0 mt-lg-3">
+            <div class="container-fluid">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    <!-- Modal: Create project -->
+    <div class="modal fade" id="CreateNew" tabindex="-1">
+        <div class="modal-dialog modal-dialog-vertical modal-dialog-scrollable">
+            <div class="modal-content rounded-0">
+                <div class="modal-header">
+                    <h5 class="modal-title">Setup new project</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="progress bg-transparent" style="height: 3px;">
+                    <div class="progress-bar bg-primary" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="5" style="width: 20%;"></div>
+                </div>
+                <div class="modal-body custom_scroll">
+                    <ul class="nav nav-tabs tab-card border-0 fs-6" role="tablist">
+                        <li class="nav-item flex-fill text-center"><a class="nav-link active" href="#step1" data-bs-toggle="tab" data-bs-step="1">1. Project</a></li>
+                        <li class="nav-item flex-fill text-center"><a class="nav-link" href="#step2" data-bs-toggle="tab" data-bs-step="3">2. Team</a></li>
+                        <li class="nav-item flex-fill text-center"><a class="nav-link" href="#step3" data-bs-toggle="tab" data-bs-step="4">3. File</a></li>
+                        <li class="nav-item flex-fill text-center"><a class="nav-link" href="#step4" data-bs-toggle="tab" data-bs-step="5">4. Completed</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="step1">
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-1">Project Type</h6>
+                                    <p class="text-muted small">If you need more info, please check out <a href="#">FAQ Page</a></p>
+                                    <!-- Custome redio input -->
+                                    <div class="c_radio d-flex flex-md-wrap">
+                                        <label class="m-1 w-100" for="Personal">
+                                            <input type="radio" name="plan" id="Personal" checked />
+                                            <span class="card">
+                                                <span class="card-body d-flex p-3">
+                                                    <svg class="avatar" viewBox="0 0 16 16">
+                                                        <path class="fill-muted" d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                                                    </svg>
+                                                    <span class="ms-3">
+                                                        <span class="h6 d-flex mb-1">Personal Project</span>
+                                                        <span class="text-muted">For smaller business, with simple salaries and pay schedules.</span>
+                                                    </span>
+                                                </span>
+                                            </span>
+                                        </label>
+                                        <label class="m-1 w-100" for="Team">
+                                            <input type="radio" name="plan" id="Team" />
+                                            <span class="card">
+                                                <span class="card-body d-flex p-3">
+                                                    <svg class="avatar" viewBox="0 0 16 16">
+                                                        <path class="fill-muted" d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                                                        <path class="fill-muted" fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z" />
+                                                        <path class="fill-muted" d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" />
+                                                    </svg>
+                                                    <span class="ms-3">
+                                                        <span class="h6 d-flex mb-1">Team Project</span>
+                                                        <span class="text-muted">For growing business who wants to create a rewarding place to work.</span>
+                                                    </span>
+                                                </span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-1">Project Details</h6>
+                                    <p class="text-muted small">It is a long established fact that a reader will be distracted by Luno.</p>
+                                    <div class="form-floating mb-2">
+                                        <select class="form-select">
+                                            <option selected>Open this select menu</option>
+                                            <option value="1">Lucid</option>
+                                            <option value="2">LUNO</option>
+                                            <option value="3">Luno</option>
+                                        </select>
+                                        <label>Choose a Customer *</label>
+                                    </div>
+                                    <div class="form-floating mb-2">
+                                        <input type="text" class="form-control" placeholder="Project name">
+                                        <label>Project name *</label>
+                                    </div>
+                                    <div class="form-floating mb-2">
+                                        <textarea class="form-control" placeholder="Add project details" style="height: 100px"></textarea>
+                                        <label>Add project details</label>
+                                    </div>
+                                    <div class="form-floating mb-2">
+                                        <input type="date" class="form-control">
+                                        <label>Enter release Date *</label>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <div class="text-muted">Allow Notifications *</div>
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="checkbox" id="allow_phone" value="option1">
+                                                <label class="form-check-label" for="allow_phone">Phone</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="checkbox" id="allow_email" value="option2">
+                                                <label class="form-check-label" for="allow_email">Email</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <button class="btn btn-lg bg-secondary text-light next text-uppercase">Add People</button>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="step2">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-1">Build a Team</h6>
+                                    <p class="text-muted small">If you need more info, please check out <a href="#">Project Guidelines</a></p>
+                                    <div class="form-floating mb-4">
+                                        <input type="text" class="form-control" placeholder="Invite Teammates">
+                                        <label>Invite Teammates</label>
+                                    </div>
+                                    <h6 class="card-title mb-1">Team Members</h6>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="list-group6" checked="">
+                                        <label class="form-check-label text-muted" for="list-group6">Adding Users by Team Members</label>
+                                    </div>
+                                </div>
+                                <ul class="list-group list-group-flush list-group-custom custom_scroll mb-0" style="height: 300px;">
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <img class="avatar rounded" src="~/luno/assets/img/xs/avatar1.jpg" alt="">
+                                        <div class="flex-fill ms-2">
+                                            <div class="h6 mb-0">Chris Fox</div>
+                                            <small class="text-muted">Angular Developer</small>
+                                        </div>
+                                        <select class="form-select rounded-pill form-select-sm w120">
+                                            <option value="1">Owner</option>
+                                            <option value="2">Can Edit</option>
+                                            <option value="3">Guest</option>
+                                        </select>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <img class="avatar rounded" src="~/luno/assets/img/xs/avatar2.jpg" alt="">
+                                        <div class="flex-fill ms-2">
+                                            <div class="h6 mb-0">Joge Lucky</div>
+                                            <small class="text-muted">ReactJs Developer</small>
+                                        </div>
+                                        <select class="form-select rounded-pill form-select-sm w120">
+                                            <option value="1">Owner</option>
+                                            <option value="2">Can Edit</option>
+                                            <option value="3">Guest</option>
+                                        </select>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <img class="avatar rounded" src="~/luno/assets/img/xs/avatar3.jpg" alt="">
+                                        <div class="flex-fill ms-2">
+                                            <div class="h6 mb-0">Chris Fox</div>
+                                            <small class="text-muted">NodeJs Developer</small>
+                                        </div>
+                                        <select class="form-select rounded-pill form-select-sm w120">
+                                            <option value="1">Owner</option>
+                                            <option value="2">Can Edit</option>
+                                            <option value="3">Guest</option>
+                                        </select>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <img class="avatar rounded" src="~/luno/assets/img/xs/avatar4.jpg" alt="">
+                                        <div class="flex-fill ms-2">
+                                            <div class="h6 mb-0">Chris Fox</div>
+                                            <small class="text-muted">Sr. Designer</small>
+                                        </div>
+                                        <select class="form-select rounded-pill form-select-sm w120">
+                                            <option value="1">Owner</option>
+                                            <option value="2">Can Edit</option>
+                                            <option value="3">Guest</option>
+                                        </select>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <img class="avatar rounded" src="~/luno/assets/img/xs/avatar5.jpg" alt="">
+                                        <div class="flex-fill ms-2">
+                                            <div class="h6 mb-0">Chris Fox</div>
+                                            <small class="text-muted">Designer</small>
+                                        </div>
+                                        <select class="form-select rounded-pill form-select-sm w120">
+                                            <option value="1">Owner</option>
+                                            <option value="2">Can Edit</option>
+                                            <option value="3">Guest</option>
+                                        </select>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <img class="avatar rounded" src="~/luno/assets/img/xs/avatar6.jpg" alt="">
+                                        <div class="flex-fill ms-2">
+                                            <div class="h6 mb-0">Chris Fox</div>
+                                            <small class="text-muted">Front-End Developer</small>
+                                        </div>
+                                        <select class="form-select rounded-pill form-select-sm w120">
+                                            <option value="1">Owner</option>
+                                            <option value="2">Can Edit</option>
+                                            <option value="3">Guest</option>
+                                        </select>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <img class="avatar rounded" src="~/luno/assets/img/xs/avatar7.jpg" alt="">
+                                        <div class="flex-fill ms-2">
+                                            <div class="h6 mb-0">Chris Fox</div>
+                                            <small class="text-muted">QA</small>
+                                        </div>
+                                        <select class="form-select rounded-pill form-select-sm w120">
+                                            <option value="1">Owner</option>
+                                            <option value="2">Can Edit</option>
+                                            <option value="3">Guest</option>
+                                        </select>
+                                    </li>
+                                    <li class="list-group-item d-flex align-items-center">
+                                        <img class="avatar rounded" src="~/luno/assets/img/xs/avatar8.jpg" alt="">
+                                        <div class="flex-fill ms-2">
+                                            <div class="h6 mb-0">Chris Fox</div>
+                                            <small class="text-muted">Laravel Developer</small>
+                                        </div>
+                                        <select class="form-select rounded-pill form-select-sm w120">
+                                            <option value="1">Owner</option>
+                                            <option value="2">Can Edit</option>
+                                            <option value="3">Guest</option>
+                                        </select>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="text-center">
+                                <button class="btn btn-lg bg-secondary text-light next text-uppercase">Select Files</button>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="step3">
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title mb-1">Upload Files</h6>
+                                    <div class="mb-4">
+                                        <label class="form-label small">Upload up to 10 files</label>
+                                        <input class="form-control" type="file" multiple>
+                                    </div>
+                                    <span>Already Uploaded File</span>
+                                </div>
+                                <ul class="list-group list-group-flush list-group-custom custom_scroll mb-0" style="height: 300px;">
+                                    <li class="list-group-item py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar rounded no-thumbnail"><i class="fa fa-file-pdf-o text-danger"></i></div>
+                                            <div class="flex-fill ms-3 text-truncate">
+                                                <p class="mb-0 color-800">Annual Sales Report 2018-19</p>
+                                                <small class="text-muted">.pdf, 5.3 MB</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar rounded no-thumbnail"><i class="fa fa-file-excel-o text-success"></i></div>
+                                            <div class="flex-fill ms-3 text-truncate">
+                                                <p class="mb-0 color-800">Complete Product Sheet</p>
+                                                <small class="text-muted">.xls, 2.1 MB</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar rounded no-thumbnail"><i class="fa fa-file-word-o text-info"></i></div>
+                                            <div class="flex-fill ms-3 text-truncate">
+                                                <p class="mb-0 color-800">Marketing Guidelines</p>
+                                                <small class="text-muted">.doc, 2.3 MB</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="list-group-item py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar rounded no-thumbnail"><i class="fa fa-file-zip-o"></i></div>
+                                            <div class="flex-fill ms-3 text-truncate">
+                                                <p class="mb-0 color-800">Brand Photography</p>
+                                                <small class="text-muted">.zip, 30.5 MB</small>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="text-center">
+                                <button class="btn btn-lg bg-secondary text-light next text-uppercase">Advanced Options</button>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="step4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h4 class="card-title mb-1">Project Created!</h4>
+                                    <span class="text-muted">If you need more info, please check how to create project</span>
+                                </div>
+                                <div class="card-body">
+                                    <button class="btn btn-lg bg-light first text-uppercase">Cretae new project</button>
+                                    <button class="btn btn-lg bg-secondary text-light text-uppercase">View project</button>
+                                </div>
+                                <div class="card-body">
+                                    <img class="img-fluid" src="~/luno/assets/img/project-team.svg" alt="" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal: my notes -->
+    <div class="modal fade" id="MynotesModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-vertical modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header px-4">
+                    <h5 class="modal-title">My Notes <span class="badge bg-danger ms-2">14</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="bg-light px-4 py-3">
+                    <ul class="nav nav-pills nav-fill" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#Notetab-all" role="tab" aria-selected="true">All Notes</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#Notetab-Business" role="tab" aria-selected="false">Business</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#Notetab-Social" role="tab">Social</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#Notetab-Create" role="tab"><i class="fa fa-plus me-2"></i>New</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="modal-body px-4 custom_scroll">
+                    <div class="tab-content p-0">
+                        <div class="tab-pane fade active show" id="Notetab-all" role="tabpanel">
+                            <div class="card ribbon mb-2">
+                                <div class="option-2 bg-primary position-absolute"></div>
+                                <div class="card-body">
+                                    <span class="text-muted">02 January 2021</span>
+                                    <p class="lead">Give Review for design</p>
+                                    <span>It has roots in a piece of classical Latin literature from 45 BC, making it over 2020 years old.</span>
+                                </div>
+                                <div class="card-footer pt-0 border-0">
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-star favourite-note"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-trash favourite-note"></i></a>
+                                </div>
+                            </div>
+                            <div class="card ribbon mb-2">
+                                <div class="option-2 bg-success position-absolute"></div>
+                                <div class="card-body">
+                                    <span class="text-muted">17 January 2022</span>
+                                    <p class="lead">Give salary to employee</p>
+                                    <span>The generated Lorem Ipsum is therefore always free from repetition</span>
+                                </div>
+                                <div class="card-footer pt-0 border-0">
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-star favourite-note"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-trash favourite-note"></i></a>
+                                </div>
+                            </div>
+                            <div class="card ribbon mb-2">
+                                <div class="option-2 bg-info position-absolute"></div>
+                                <div class="card-body">
+                                    <span class="text-muted">02 Fabruary 2020</span>
+                                    <p class="lead">Launch new template</p>
+                                    <span>Blandit tempus porttitor aasfs. Integer posuere erat a ante venenatis.</span>
+                                </div>
+                                <div class="card-footer pt-0 border-0">
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-star favourite-note"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-trash favourite-note"></i></a>
+                                </div>
+                            </div>
+                            <div class="card ribbon mb-2">
+                                <div class="option-2 bg-dark position-absolute"></div>
+                                <div class="card-body">
+                                    <span class="text-muted">22 August 2021</span>
+                                    <p class="lead">Nightout with friends</p>
+                                    <span>Blandit tempus porttitor aasfs. Integer posuere erat a ante venenatis.</span>
+                                </div>
+                                <div class="card-footer pt-0 border-0">
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-star favourite-note"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-trash favourite-note"></i></a>
+                                </div>
+                            </div>
+                            <div class="card ribbon mb-2">
+                                <div class="option-2 bg-danger position-absolute"></div>
+                                <div class="card-body">
+                                    <span class="text-muted">01 December 2021</span>
+                                    <p class="lead">Change a Design</p>
+                                    <span> It has survived not only five centuries, but also the leap into electronic</span>
+                                </div>
+                                <div class="card-footer pt-0 border-0">
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-star favourite-note"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-trash favourite-note"></i></a>
+                                </div>
+                            </div>
+                            <div class="card ribbon mb-2">
+                                <div class="option-2 bg-warning position-absolute"></div>
+                                <div class="card-body">
+                                    <span class="text-muted">10 December 2021</span>
+                                    <p class="lead">Meeting with Mr.Lee</p>
+                                    <span>Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model</span>
+                                </div>
+                                <div class="card-footer pt-0 border-0">
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-star favourite-note"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-trash favourite-note"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="Notetab-Business" role="tabpanel">
+                            <div class="card ribbon mb-2">
+                                <div class="option-2 bg-warning position-absolute"></div>
+                                <div class="card-body">
+                                    <span class="text-muted">10 December 2021</span>
+                                    <p class="lead">Meeting with Mr.Lee</p>
+                                    <span>Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model</span>
+                                </div>
+                                <div class="card-footer pt-0 border-0">
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-star favourite-note"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-trash favourite-note"></i></a>
+                                </div>
+                            </div>
+                            <div class="card ribbon mb-2">
+                                <div class="option-2 bg-danger position-absolute"></div>
+                                <div class="card-body">
+                                    <span class="text-muted">01 December 2021</span>
+                                    <p class="lead">Change a Design</p>
+                                    <span> It has survived not only five centuries, but also the leap into electronic</span>
+                                </div>
+                                <div class="card-footer pt-0 border-0">
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-star favourite-note"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-trash favourite-note"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="Notetab-Social" role="tabpanel">
+                            <div class="card ribbon mb-2">
+                                <div class="option-2 bg-dark position-absolute"></div>
+                                <div class="card-body">
+                                    <span class="text-muted">22 August 2021</span>
+                                    <p class="lead">Nightout with friends</p>
+                                    <span>Blandit tempus porttitor aasfs. Integer posuere erat a ante venenatis.</span>
+                                </div>
+                                <div class="card-footer pt-0 border-0">
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-star favourite-note"></i></a>
+                                    <a class="btn btn-sm btn-outline-secondary" href="#"><i class="fa fa-trash favourite-note"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="Notetab-Create" role="tabpanel">
+                            <div class="form-floating mb-2">
+                                <input type="text" class="form-control" placeholder="Note Title">
+                                <label>Note Title</label>
+                            </div>
+                            <div class="form-floating mb-2">
+                                <input type="text" class="form-control datepicker" placeholder="Select Date">
+                                <label>Select Date</label>
+                            </div>
+                            <div class="form-floating mb-2">
+                                <select class="form-select" id="floatingSelect" aria-label="Floating label select example">
+                                    <option selected>Open this select menu</option>
+                                    <option value="1">Business</option>
+                                    <option value="2">Social</option>
+                                </select>
+                                <label>Works with selects</label>
+                            </div>
+                            <div class="form-floating mb-4">
+                                <textarea class="form-control" placeholder="Leave a comment here" style="height: 100px"></textarea>
+                                <label>Leave a comment here</label>
+                            </div>
+                            <button type="button" class="btn btn-primary lift">Save note</button>
+                            <button type="button" class="btn btn-white border lift" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal: Schedule -->
+    <div class="modal fade" id="ScheduleModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-vertical modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-secondary rounded-0">
+                    <h5 class="modal-title text-light">Schedule</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body custom_scroll">
+                    <div class="ps-2">
+                        <!--Timeline item-->
+                        <div class="timeline-item ti-primary p-3">
+                            <div class="avatar sm rounded-circle no-thumbnail">
+                                <i class="fa fa-phone"></i>
+                            </div>
+                            <div class="timeline-content ms-3">
+                                <div>Call Danny at Colby's</div>
+                                <small class="text-muted">Today - 11:32am</small>
+                            </div>
+                        </div>
+                        <!--Timeline item-->
+                        <div class="timeline-item ti-info p-3">
+                            <div class="timeline-icon">
+                                <img class="avatar sm rounded-circle" src="~/luno/assets/img/xs/avatar1.jpg" alt="">
+                            </div>
+                            <div class="timeline-content ms-3">
+                                <div>Meeting with Alice</div>
+                                <small class="text-muted">Today - 12:50pm</small>
+                            </div>
+                        </div>
+                        <!--Timeline item-->
+                        <div class="timeline-item ti-danger p-3">
+                            <div class="avatar sm rounded-circle no-thumbnail">
+                                <i class="fa fa-comment"></i>
+                            </div>
+                            <div class="timeline-content ms-3">
+                                <div>Answer Annie's message</div>
+                                <small class="text-muted">Today - 01:35pm</small>
+                            </div>
+                        </div>
+                        <!--Timeline item-->
+                        <div class="timeline-item ti-danger p-3">
+                            <div class="avatar sm rounded-circle no-thumbnail">
+                                <i class="fa fa-phone"></i>
+                            </div>
+                            <div class="timeline-content ms-3">
+                                <div>Send new campaign</div>
+                                <small class="text-muted">Today - 02:40pm</small>
+                            </div>
+                        </div>
+                        <!--Timeline item-->
+                        <div class="timeline-item ti-primary p-3">
+                            <div class="avatar sm rounded-circle no-thumbnail">
+                                <i class="fa fa-smile-o"></i>
+                            </div>
+                            <div class="timeline-content ms-3">
+                                <div>Project review</div>
+                                <small class="text-muted">Today - 03:15pm</small>
+                            </div>
+                        </div>
+                        <!--Timeline item-->
+                        <div class="timeline-item ti-warning p-3">
+                            <div class="avatar sm rounded-circle no-thumbnail">
+                                <i class="fa fa-phone"></i>
+                            </div>
+                            <div class="timeline-content ms-3">
+                                <div>Call Trisha Jackson</div>
+                                <small class="text-muted">Today - 05:40pm</small>
+                            </div>
+                        </div>
+                        <!--Timeline item-->
+                        <div class="timeline-item ti-success p-3">
+                            <div class="avatar sm rounded-circle no-thumbnail">
+                                <i class="fa fa-leaf"></i>
+                            </div>
+                            <div class="timeline-content ms-3">
+                                <div>Write proposal for Don</div>
+                                <small class="text-muted">Today - 06:30pm</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal: RecentChat -->
+    <div class="modal fade" id="RecentChat" tabindex="-1">
+        <div class="modal-dialog modal-dialog-vertical modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="d-flex align-items-start">
+                    <div class="nav flex-column nav-pills p-3 h-100">
+                        <a class="nav-link rounded-circle p-1 mb-2 active" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-1" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar1.jpg" alt="avatar">
+                        </a>
+                        <a class="nav-link rounded-circle p-1 mb-2" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-2" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar2.jpg" alt="avatar">
+                        </a>
+                        <a class="nav-link rounded-circle p-1 mb-2" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-3" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar3.jpg" alt="avatar">
+                        </a>
+                        <a class="nav-link rounded-circle p-1 mb-2" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-2" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar4.jpg" alt="avatar">
+                        </a>
+                        <a class="nav-link rounded-circle p-1 mb-2" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-5" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar5.jpg" alt="avatar">
+                        </a>
+                        <a class="nav-link rounded-circle p-1 mb-2" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-1" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar6.jpg" alt="avatar">
+                        </a>
+                        <a class="nav-link rounded-circle p-1 mb-2" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-7" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar7.jpg" alt="avatar">
+                        </a>
+                        <a class="nav-link rounded-circle p-1 mb-2" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-3" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar8.jpg" alt="avatar">
+                        </a>
+                        <a class="nav-link rounded-circle p-1 mb-2" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-3" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar9.jpg" alt="avatar">
+                        </a>
+                        <a class="nav-link rounded-circle p-1 mb-2" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-1" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar10.jpg" alt="avatar">
+                        </a>
+                        <a class="nav-link rounded-circle p-1 mb-2" href="javascript:void(0);" data-bs-toggle="pill" data-bs-target="#c-user-1" title="">
+                            <img class="avatar sm rounded-circle border" src="~/luno/assets/img/xs/avatar5.jpg" alt="avatar">
+                        </a>
+                    </div>
+                    <div class="tab-content shadow-sm">
+                        <div class="tab-pane fade show active" id="c-user-1" role="tabpanel">
+                            <div class="card">
+                                <!-- start: chat header -->
+                                <div class="card-header border-bottom py-3">
+                                    <div class="d-flex">
+                                        <a href="javascript:void(0);" title="">
+                                            <img class="avatar rounded-circle" src="~/luno/assets/img/xs/avatar1.jpg" alt="avatar">
+                                        </a>
+                                        <div class="ms-3">
+                                            <h6 class="mb-0">Orlando Lentz</h6>
+                                            <small class="text-muted">Last seen: 2 hours ago</small>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown morphing scale-left">
+                                        <a class="nav-link p-2 text-secondary d-none d-xl-inline-block" href="javascript:void(0);"><i class="fa fa-camera"></i></a>
+                                        <a class="nav-link p-2 me-1 text-secondary d-none d-xl-inline-block" href="javascript:void(0);"><i class="fa fa-video-camera"></i></a>
+                                        <a class="nav-link py-2 px-3 text-muted d-inline-block d-xl-none" data-bs-dismiss="modal" aria-label="Close" href="#"><i class="fa fa-close"></i></a>
+                                        <a href="#" class="more-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-h"></i></a>
+                                        <ul class="dropdown-menu shadow border-0 p-2">
+                                            <li><a class="dropdown-item" href="#">File Info</a></li>
+                                            <li><a class="dropdown-item" href="#">Copy to</a></li>
+                                            <li><a class="dropdown-item" href="#">Move to</a></li>
+                                            <li><a class="dropdown-item" href="#">Rename</a></li>
+                                            <li><a class="dropdown-item" href="#">Block</a></li>
+                                            <li><a class="dropdown-item" href="#">Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <!-- start: chat body -->
+                                <div class="card-body custom_scroll" style="height: calc(100vh - 141px);">
+                                    <ul class="list-unstyled chat-history flex-grow-1">
+                                        <!-- Chat: left -->
+                                        <li class="mb-3 d-flex flex-row align-items-end">
+                                            <div class="max-width-70">
+                                                <div class="user-info mb-1">
+                                                    <img class="avatar xs rounded-circle me-1" src="~/luno/assets/img/xs/avatar1.jpg" alt="avatar">
+                                                    <span class="text-muted small">10:10 AM, Today</span>
+                                                </div>
+                                                <div class="card p-3">
+                                                    <div class="message"> Hi Aiden, how are you?</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: right -->
+                                        <li class="mb-3 d-flex flex-row-reverse align-items-end">
+                                            <div class="max-width-70 text-end">
+                                                <div class="user-info mb-1">
+                                                    <span class="text-muted small">10:12 AM, Today</span>
+                                                </div>
+                                                <div class="card border-0 p-3 bg-primary text-light">
+                                                    <div class="message">Are we meeting today?</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: left -->
+                                        <li class="mb-3 d-flex flex-row align-items-end">
+                                            <div class="max-width-70">
+                                                <div class="user-info mb-1">
+                                                    <img class="avatar xs rounded-circle me-1" src="~/luno/assets/img/xs/avatar1.jpg" alt="avatar">
+                                                    <span class="text-muted small">10:10 AM, Today</span>
+                                                </div>
+                                                <div class="card p-3">
+                                                    <div class="message"> It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: left -->
+                                        <li class="mb-3 d-flex flex-row align-items-end">
+                                            <div class="max-width-70">
+                                                <div class="user-info mb-1">
+                                                    <img class="avatar xs rounded-circle me-1" src="~/luno/assets/img/xs/avatar1.jpg" alt="avatar">
+                                                    <span class="text-muted small">10:10 AM, Today</span>
+                                                </div>
+                                                <div class="card p-3">
+                                                    <div class="message"> Contrary to popular belief, Lorem Ipsum is not simply random text.</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: right -->
+                                        <li class="mb-3 d-flex flex-row-reverse align-items-end">
+                                            <div class="max-width-70 text-end">
+                                                <div class="user-info mb-1">
+                                                    <span class="text-muted small">10:12 AM, Today</span>
+                                                </div>
+                                                <div class="card border-0 p-3 bg-primary text-light">
+                                                    <div class="message">Yes, Orlando Allredy done <br> There are many variations of passages of Lorem Ipsum available</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: left -->
+                                        <li class="mb-3 d-flex flex-row align-items-end">
+                                            <div class="max-width-70">
+                                                <div class="user-info mb-1">
+                                                    <img class="avatar xs rounded-circle me-1" src="~/luno/assets/img/xs/avatar1.jpg" alt="avatar">
+                                                    <span class="text-muted small">10:10 AM, Today</span>
+                                                </div>
+                                                <div class="card p-3">
+                                                    <div class="message">
+                                                        <p>Please find attached images</p>
+                                                        <img class="w120 img-thumbnail" src="~/luno/assets/img/gallery/3.jpg" alt="">
+                                                        <img class="w120 img-thumbnail" src="~/luno/assets/img/gallery/4.jpg" alt="">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: right -->
+                                        <li class="mb-3 d-flex flex-row-reverse align-items-end">
+                                            <div class="max-width-70 text-end">
+                                                <div class="user-info mb-1">
+                                                    <span class="text-muted small">10:12 AM, Today</span>
+                                                </div>
+                                                <div class="card border-0 p-3 bg-primary text-light">
+                                                    <div class="message">Okay, will check and let you know.</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <!-- start: chat footer -->
+                                <div class="card-footer border-top bg-transparent py-3 px-4">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" placeholder="Enter text here...">
+                                        <button class="btn btn-primary" type="button">Send</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade show active" id="c-user-2" role="tabpanel">
+                            <div class="card">
+                                <!-- start: chat header -->
+                                <div class="card-header border-bottom py-3">
+                                    <div class="d-flex">
+                                        <a href="javascript:void(0);" title="">
+                                            <img class="avatar rounded-circle" src="~/luno/assets/img/xs/avatar2.jpg" alt="avatar">
+                                        </a>
+                                        <div class="ms-3">
+                                            <h6 class="mb-0">Orlando Lentz</h6>
+                                            <small class="text-muted">Last seen: 2 hours ago</small>
+                                        </div>
+                                    </div>
+                                    <div class="dropdown morphing scale-left">
+                                        <a class="nav-link p-2 text-secondary d-none d-xl-inline-block" href="javascript:void(0);"><i class="fa fa-camera"></i></a>
+                                        <a class="nav-link p-2 me-1 text-secondary d-none d-xl-inline-block" href="javascript:void(0);"><i class="fa fa-video-camera"></i></a>
+                                        <a class="nav-link py-2 px-3 text-muted d-inline-block d-xl-none" data-bs-dismiss="modal" aria-label="Close" href="#"><i class="fa fa-close"></i></a>
+                                        <a href="#" class="more-icon dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-h"></i></a>
+                                        <ul class="dropdown-menu shadow border-0 p-2">
+                                            <li><a class="dropdown-item" href="#">File Info</a></li>
+                                            <li><a class="dropdown-item" href="#">Copy to</a></li>
+                                            <li><a class="dropdown-item" href="#">Move to</a></li>
+                                            <li><a class="dropdown-item" href="#">Rename</a></li>
+                                            <li><a class="dropdown-item" href="#">Block</a></li>
+                                            <li><a class="dropdown-item" href="#">Delete</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <!-- start: chat body -->
+                                <div class="card-body custom_scroll" style="height: calc(100vh - 141px);">
+                                    <ul class="list-unstyled chat-history flex-grow-1">
+                                        <!-- Chat: right -->
+                                        <li class="mb-3 d-flex flex-row-reverse align-items-end">
+                                            <div class="max-width-70 text-end">
+                                                <div class="user-info mb-1">
+                                                    <span class="text-muted small">10:12 AM, Today</span>
+                                                </div>
+                                                <div class="card border-0 p-3 bg-primary text-light">
+                                                    <div class="message">Are we meeting today?</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: left -->
+                                        <li class="mb-3 d-flex flex-row align-items-end">
+                                            <div class="max-width-70">
+                                                <div class="user-info mb-1">
+                                                    <img class="avatar xs rounded-circle me-1" src="~/luno/assets/img/xs/avatar2.jpg" alt="avatar">
+                                                    <span class="text-muted small">10:10 AM, Today</span>
+                                                </div>
+                                                <div class="card p-3">
+                                                    <div class="message"> Hi Aiden, how are you?</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: right -->
+                                        <li class="mb-3 d-flex flex-row-reverse align-items-end">
+                                            <div class="max-width-70 text-end">
+                                                <div class="user-info mb-1">
+                                                    <span class="text-muted small">10:12 AM, Today</span>
+                                                </div>
+                                                <div class="card border-0 p-3 bg-primary text-light">
+                                                    <div class="message">Yes, Orlando Allredy done <br> There are many variations of passages of Lorem Ipsum available</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: left -->
+                                        <li class="mb-3 d-flex flex-row align-items-end">
+                                            <div class="max-width-70">
+                                                <div class="user-info mb-1">
+                                                    <img class="avatar xs rounded-circle me-1" src="~/luno/assets/img/xs/avatar2.jpg" alt="avatar">
+                                                    <span class="text-muted small">10:10 AM, Today</span>
+                                                </div>
+                                                <div class="card p-3">
+                                                    <div class="message">
+                                                        <p>Please find attached images</p>
+                                                        <img class="w120 img-thumbnail" src="~/luno/assets/img/gallery/1.jpg" alt="">
+                                                        <img class="w120 img-thumbnail" src="~/luno/assets/img/gallery/2.jpg" alt="">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: right -->
+                                        <li class="mb-3 d-flex flex-row-reverse align-items-end">
+                                            <div class="max-width-70 text-end">
+                                                <div class="user-info mb-1">
+                                                    <span class="text-muted small">10:12 AM, Today</span>
+                                                </div>
+                                                <div class="card border-0 p-3 bg-primary text-light">
+                                                    <div class="message">Okay, will check and let you know.</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: left -->
+                                        <li class="mb-3 d-flex flex-row align-items-end">
+                                            <div class="max-width-70">
+                                                <div class="user-info mb-1">
+                                                    <img class="avatar xs rounded-circle me-1" src="~/luno/assets/img/xs/avatar2.jpg" alt="avatar">
+                                                    <span class="text-muted small">10:10 AM, Today</span>
+                                                </div>
+                                                <div class="card p-3">
+                                                    <div class="message"> It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                        <!-- Chat: left -->
+                                        <li class="mb-3 d-flex flex-row align-items-end">
+                                            <div class="max-width-70">
+                                                <div class="user-info mb-1">
+                                                    <img class="avatar xs rounded-circle me-1" src="~/luno/assets/img/xs/avatar2.jpg" alt="avatar">
+                                                    <span class="text-muted small">10:10 AM, Today</span>
+                                                </div>
+                                                <div class="card p-3">
+                                                    <div class="message"> Contrary to popular belief, Lorem Ipsum is not simply random text.</div>
+                                                </div>
+                                            </div>
+                                            <!-- More option -->
+                                            <div class="btn-group">
+                                                <a href="#" class="nav-link py-2 px-3 text-muted" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa fa-ellipsis-v"></i></a>
+                                                <ul class="dropdown-menu rounded-4 border-0 shadow">
+                                                    <li><a class="dropdown-item" href="#">Edit</a></li>
+                                                    <li><a class="dropdown-item" href="#">Share</a></li>
+                                                    <li><a class="dropdown-item" href="#">Delete</a></li>
+                                                </ul>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <!-- start: chat footer -->
+                                <div class="card-footer border-top bg-transparent py-3 px-4">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" placeholder="Enter text here...">
+                                        <button class="btn btn-primary" type="button">Send</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User Profile Modal -->
+    <div class="modal fade" id="UserProfileModal" tabindex="-1" role="dialog" aria-labelledby="UserProfileModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="UserProfileModalLabel">
+                        <i class="fas fa-user me-2"></i>User Profile
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="text-center mb-4">
+                                <div class="avatar-lg mx-auto mb-3">
+                                    <i class="fas fa-user-circle fa-4x text-primary"></i>
+                                </div>
+                                <h6 class="mb-1" id="userName">@User.Identity?.Name</h6>
+                                <p class="text-muted mb-0" id="userEmail">@User.Identity?.Name</p>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-lock me-2"></i>Change Password</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form id="changePasswordForm">
+                                        <div class="mb-3">
+                                            <label for="currentPassword" class="form-label">Current Password</label>
+                                            <input type="password" class="form-control" id="currentPassword" required>
+                                            <div class="invalid-feedback" id="currentPasswordError"></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="newPassword" class="form-label">New Password</label>
+                                            <input type="password" class="form-control" id="newPassword" required>
+                                            <div class="invalid-feedback" id="newPasswordError"></div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                            <input type="password" class="form-control" id="confirmPassword" required>
+                                            <div class="invalid-feedback" id="confirmPasswordError"></div>
+                                        </div>
+                                        <div class="d-grid">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save me-2"></i>Update Password
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Jquery Page Js -->
+    <!-- Jquery Page Js -->
+    <script src="~/luno/assets/js/theme.js"></script>
+    <!-- Plugin Js -->
+    <!-- Plugin Js -->
+    <script src="~/luno/assets/js/bundle/dataTables.bundle.js"></script>
+   <script src="https://cdn.datatables.net/buttons/1.7.1/js/dataTables.buttons.min.js"></script>
+
+    <!-- Vendor Script -->
+    @await RenderSectionAsync("Scripts", required: false)
+    
+    <!-- User Profile Modal Scripts -->
+    <script>
+        $(document).ready(function() {
+            // Handle password change form submission
+            $('#changePasswordForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                // Clear previous errors
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').text('');
+                
+                const currentPassword = $('#currentPassword').val();
+                const newPassword = $('#newPassword').val();
+                const confirmPassword = $('#confirmPassword').val();
+                
+                // Basic validation
+                if (!currentPassword) {
+                    $('#currentPassword').addClass('is-invalid');
+                    $('#currentPasswordError').text('Current password is required');
+                    return;
+                }
+                
+                if (!newPassword) {
+                    $('#newPassword').addClass('is-invalid');
+                    $('#newPasswordError').text('New password is required');
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    $('#newPassword').addClass('is-invalid');
+                    $('#newPasswordError').text('New password must be at least 6 characters long');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    $('#confirmPassword').addClass('is-invalid');
+                    $('#confirmPasswordError').text('Passwords do not match');
+                    return;
+                }
+                
+                // Show loading state
+                const submitBtn = $(this).find('button[type="submit"]');
+                const originalText = submitBtn.html();
+                submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Updating...');
+                submitBtn.prop('disabled', true);
+                
+                // Send AJAX request
+                $.ajax({
+                    url: '/ManualUpload/ChangePassword',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        oldPassword: currentPassword,
+                        newPassword: newPassword,
+                        confirmPassword: confirmPassword
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            // Show success message
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Your password has been updated successfully.',
+                                timer: 3000,
+                                showConfirmButton: false
+                            });
+                            
+                            // Clear form and close modal
+                            $('#changePasswordForm')[0].reset();
+                            $('#UserProfileModal').modal('hide');
+                        } else {
+                            // Show error message
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: response.message || 'Failed to update password. Please try again.',
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'An error occurred while updating your password.';
+                        
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.responseText) {
+                            // Try to extract error message from response
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(xhr.responseText, 'text/html');
+                            const errorElements = doc.querySelectorAll('.text-danger');
+                            if (errorElements.length > 0) {
+                                errorMessage = Array.from(errorElements).map(el => el.textContent.trim()).join(', ');
+                            }
+                        }
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: errorMessage,
+                        });
+                    },
+                    complete: function() {
+                        // Reset button state
+                        submitBtn.html(originalText);
+                        submitBtn.prop('disabled', false);
+                    }
+                });
+            });
+            
+            // Clear form when modal is closed
+            $('#UserProfileModal').on('hidden.bs.modal', function() {
+                $('#changePasswordForm')[0].reset();
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').text('');
+            });
+        });
+    </script>
+</body>
+</html>

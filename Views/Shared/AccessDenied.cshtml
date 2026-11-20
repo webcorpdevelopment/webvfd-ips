@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Access Denied";
+    Layout = "_AuthLayout";
+}
+
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Access Denied</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-lock text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h4 class="alert-heading">You do not have permission to access this resource.</h4>
+                        <p>Your current user account does not have the necessary permissions to access the requested page.</p>
+                    </div>
+                    
+                    <p>Please contact your administrator if you believe this is an error, or login with a different account that has the required permissions.</p>
+                    
+                    <div class="text-center mt-4">
+                        <a href="/" class="btn btn-secondary me-2">
+                            <i class="fas fa-home me-1"></i> Go to Home
+                        </a>
+                        <a href="/Identity/Account/Login" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-1"></i> Login with different account
+                        </a>
+                    </div>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <small>If you continue to experience issues, please contact your system administrator.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

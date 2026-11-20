@@ -1,0 +1,147 @@
+@model InvoiceScanner.Models.ApplicationUser
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">My Profile</h5>
+                </div>
+                <div class="card-body">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @if (TempData["NewPassword"] != null)
+                    {
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <strong>Your new password is:</strong> @TempData["NewPassword"]
+                            <p class="mb-0 mt-2">Please make sure to save this password in a secure location.</p>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="true">Profile Information</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab" aria-controls="password" aria-selected="false">Change Password</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content pt-3" id="profileTabsContent">
+                        <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                            <form asp-action="UpdateProfile" method="post">
+                                <input type="hidden" name="id" value="@Model.Id" />
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Full Name</label>
+                                        <input type="text" name="name" class="form-control" value="@Model.Name" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" name="email" class="form-control" value="@Model.Email" required />
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Phone Number</label>
+                                        <input type="tel" name="phone" class="form-control" value="@Model.PhoneNumber" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Last Activity</label>
+                                        <input type="text" class="form-control" value="@Model.LastActivity.ToString("yyyy-MM-dd HH:mm:ss")" readonly />
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Business</label>
+                                        <input type="text" class="form-control" value="@(Model.Business?.Name ?? "Not assigned")" readonly />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Branch</label>
+                                        <input type="text" class="form-control" value="@(Model.Branch?.BranchName ?? "Not assigned")" readonly />
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="tab-pane fade" id="password" role="tabpanel" aria-labelledby="password-tab">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <form asp-action="ChangePassword" method="post">
+                                        <input type="hidden" name="id" value="@Model.Id" />
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Current Password</label>
+                                            <input type="password" name="currentPassword" class="form-control" required />
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">New Password</label>
+                                            <input type="password" name="newPassword" class="form-control" required />
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Confirm New Password</label>
+                                            <input type="password" name="confirmPassword" class="form-control" required />
+                                        </div>
+                                        
+                                        <button type="submit" class="btn btn-primary">Change Password</button>
+                                    </form>
+                                    
+                                    <hr class="my-4" />
+                                    
+                                    <div class="mb-3">
+                                        <h6>Reset Password</h6>
+                                        <p class="text-muted small">This will generate a new random password for your account.</p>
+                                        <form asp-action="ResetPassword" method="post" onsubmit="return confirm('Are you sure you want to reset your password? A new random password will be generated.');">
+                                            <input type="hidden" name="id" value="@Model.Id" />
+                                            <button type="submit" class="btn btn-warning">Reset Password</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function() {
+            // Handle tab state persistence
+            var activeTab = localStorage.getItem('profileActiveTab');
+            if (activeTab) {
+                $('#profileTabs button[data-bs-target="' + activeTab + '"]').tab('show');
+            }
+            
+            $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                var targetTab = $(e.target).data('bs-target');
+                localStorage.setItem('profileActiveTab', targetTab);
+            });
+        });
+    </script>
+} 

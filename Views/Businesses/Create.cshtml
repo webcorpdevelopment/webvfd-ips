@@ -1,0 +1,100 @@
+﻿@model InvoiceScanner.Models.Business
+
+@{
+    ViewData["Title"] = "Register Business";
+}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Business details</h4>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Name" class="control-label"></label>
+                                <input asp-for="Name" class="form-control" required />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="TIN" class="control-label"></label>
+                                <input asp-for="TIN" class="form-control" required />
+                                <span asp-validation-for="TIN" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="VRN" class="control-label"></label>
+                                <input asp-for="VRN" class="form-control" />
+                                <span asp-validation-for="VRN" class="text-danger"></span>
+                            </div>
+                            <div class="form-group ">
+                                <label asp-for="NumberOfUsers" class="control-label"></label>
+                                <input asp-for="NumberOfUsers" class="form-control" />
+                                <span asp-validation-for="NumberOfUsers" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Address" class="control-label"></label>
+                                <input asp-for="Address" class="form-control" />
+                                <span asp-validation-for="Address" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Phone" class="control-label"></label>
+                                <input asp-for="Phone" class="form-control" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="GatewayCompanyId" class="control-label"></label>
+                                <input asp-for="GatewayCompanyId" class="form-control" required />
+                                <span asp-validation-for="GatewayCompanyId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">                            
+                            <div class="form-group">
+                                <label asp-for="GatewayUsername" class="control-label"></label>
+                                <input asp-for="GatewayUsername" class="form-control" required />
+                                <span asp-validation-for="GatewayUsername" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="GatewayPassword" class="control-label"></label>
+                                <input asp-for="GatewayPassword" class="form-control" required />
+                                <span asp-validation-for="GatewayPassword" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="GatewaySerialNumber" class="control-label"></label>
+                                <input asp-for="GatewaySerialNumber" class="form-control" required />
+                                <span asp-validation-for="GatewaySerialNumber" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Operator full name</label>
+                                <input type="text" id="name" name="name" class="form-control" required />
+                                <span class="text-danger field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label">Operator email</label>
+                                <input type="email" id="email" name="email" class="form-control" required />
+                                <span class="text-danger field-validation-valid" data-valmsg-for="email" data-valmsg-replace="true"></span>
+                            </div>
+                            <br />
+                            <div class="form-group">
+                                <input type="submit" value="Register" class="btn btn-primary form-control text-white" />
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

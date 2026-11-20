@@ -1,0 +1,326 @@
+@using Microsoft.AspNetCore.Identity
+@using InvoiceScanner.Services
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IPermissionService PermissionService
+
+@{
+    var user = UserManager.GetUserAsync(User).Result;
+    var hasViewDashboardPermission = await PermissionService.UserHasPermissionAsync("Dashboard.View");
+    var hasUploadInvoicesPermission = await PermissionService.UserHasPermissionAsync("Invoice.Create");
+    var hasViewInvoicesPermission = await PermissionService.UserHasPermissionAsync("Invoice.View");
+    var hasZReportPermission = await PermissionService.UserHasPermissionAsync("Invoice.ZReport");
+    var hasReportViewPermission = await PermissionService.UserHasPermissionAsync("Report.View");
+    var hasViewBusinessesPermission = await PermissionService.UserHasPermissionAsync("Business.View");
+    var hasViewUsersPermission = await PermissionService.UserHasPermissionAsync("User.View");
+    var hasViewLogsPermission = await PermissionService.UserHasPermissionAsync("System.View");
+    var hasViewCompanySettingsPermission = await PermissionService.UserHasPermissionAsync("CompanySetting.View");
+    var hasManagePermissionsPermission = await PermissionService.UserHasPermissionAsync("Permission.Manage");
+    
+    // Get the current controller and action
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    
+    // Check if the current controller is in a submenu
+    bool isInInvoiceMenu = controller == "Invoices";
+    bool isInSecurityMenu = controller == "Roles" || controller == "Permissions";
+    
+    // Check if the Setup section should be shown
+    bool showSetupSection = hasViewBusinessesPermission || hasViewUsersPermission || hasManagePermissionsPermission;
+}
+
+<div class="sidebar p-2 py-md-3 dark">
+    <div class="container-fluid">
+        <!-- sidebar: title-->
+        <div class="title-text d-flex align-items-center mb-4 mt-1">
+            <h4 class="sidebar-title mb-0 flex-grow-1">
+                <span class="sm-txt">WebVFD</span> 
+                <span>IPS</span>
+            </h4>
+        </div>
+        
+        <!-- sidebar: menu list -->
+        <div class="main-menu flex-grow-1">
+            @if (hasViewDashboardPermission)
+            {
+                <ul class="menu-list">
+                    <li class="divider py-2 lh-sm"><span class="small text-white">MAIN</span></li>
+                    <li class="nav-item">
+                        <a class="nav-link @(controller == "Home" && action == "Index" ? "active" : "")" 
+                           href="@Url.Action("Index", "Home")">
+                            <i class="fas fa-home"></i>
+                            <span class="ms-2">Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            }
+
+            @if (hasUploadInvoicesPermission || hasViewInvoicesPermission || hasZReportPermission || hasReportViewPermission)
+            {
+                <ul class="menu-list">
+                    <li class="divider py-2 lh-sm"><span class="small text-white">SALES</span></li>
+                    
+                    <li>
+                        <a class="m-link @(isInInvoiceMenu ? "active" : "")" 
+                           data-bs-toggle="collapse" 
+                           data-bs-target="#menu-invoices" 
+                           href="javascript:;">
+                            <i class="fas fa-file-invoice"></i>
+                            <span class="ms-2">Invoices</span>
+                            <span class="arrow ms-auto"><i class="fas fa-chevron-@(isInInvoiceMenu ? "down" : "right")"></i></span>
+                        </a>
+                        <!-- Sub menu -->
+                        <ul class="sub-menu collapse @(isInInvoiceMenu ? "show" : "")" id="menu-invoices">
+                            @if (hasUploadInvoicesPermission)
+                            {
+                                <li>
+                                    <a class="ms-link @(controller == "Invoices" && action == "Upload" ? "active" : "")" 
+                                       href="@Url.Action("Upload", "Invoices")">
+                                        <i class="fas fa-upload"></i>
+                                        <span>Upload Invoices</span>
+                                    </a>
+                                </li>
+                            }
+                            @if (hasViewInvoicesPermission)
+                            {
+                                <li>
+                                    <a class="ms-link @(controller == "Invoices" && action == "Index" ? "active" : "")" 
+                                       href="@Url.Action("Index", "Invoices")">
+                                        <i class="fas fa-list"></i>
+                                        <span>All Invoices</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="ms-link @(controller == "Invoices" && action == "InvoiceStore" ? "active" : "")" 
+                                       href="@Url.Action("InvoiceStore", "Invoices")">
+                                        <i class="fas fa-store"></i>
+                                        <span>Invoice Store</span>
+                                    </a>
+                                </li>
+                            }
+                            @if (hasZReportPermission)
+                            {
+                                <li>
+                                    <a class="ms-link @(controller == "Invoices" && action == "SelectDate" ? "active" : "")" 
+                                       href="@Url.Action("SelectDate", "Invoices")">
+                                        <i class="fas fa-chart-bar"></i>
+                                        <span>Z Report</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="ms-link @(controller == "Invoices" && action == "SelectDates" ? "active" : "")" 
+                                       href="@Url.Action("SelectDates", "Invoices")">
+                                        <i class="fas fa-list-alt"></i>
+                                        <span>Z Report Summary</span>
+                                    </a>
+                                </li>
+                            }
+                            @if (hasViewLogsPermission)
+                            {
+                                <li>
+                                    <a class="ms-link @(controller == "Logs" && action == "Index" ? "active" : "")" 
+                                       href="@Url.Action("Index", "Logs")">
+                                        <i class="fas fa-history"></i>
+                                        <span>Logs</span>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                    
+                    @if (hasReportViewPermission)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link @(controller == "Report" ? "active" : "")" 
+                               href="@Url.Action("Index", "Report")">
+                                <i class="fas fa-chart-line"></i>
+                                <span class="ms-2">Sales Report</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+
+            @if (showSetupSection)
+            {
+                <ul class="menu-list">
+                    <li class="divider py-2 lh-sm"><span class="small text-white">SETUP</span></li>
+                    
+                    @if (hasViewBusinessesPermission)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link @(controller == "Businesses" ? "active" : "")" 
+                               href="@Url.Action("Index", "Businesses")">
+                                <i class="fas fa-building"></i>
+                                <span class="ms-2">Businesses</span>
+                            </a>
+                        </li>
+                    }
+                    
+                    @if (hasManagePermissionsPermission)
+                    {
+                        <li>
+                            <a class="m-link @(isInSecurityMenu ? "active" : "")" 
+                               data-bs-toggle="collapse" 
+                               data-bs-target="#menu-security" 
+                               href="javascript:;">
+                                <i class="fas fa-shield-alt"></i>
+                                <span class="ms-2">Security</span>
+                                <span class="arrow ms-auto"><i class="fas fa-chevron-@(isInSecurityMenu ? "down" : "right")"></i></span>
+                            </a>
+                            <!-- Sub menu -->
+                            <ul class="sub-menu collapse @(isInSecurityMenu ? "show" : "")" id="menu-security">
+                                <li>
+                                    <a class="ms-link @(controller == "Roles" ? "active" : "")" 
+                                       href="@Url.Action("Index", "Roles")">
+                                        <i class="fas fa-user-tag"></i>
+                                        <span>Roles</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="ms-link @(controller == "Permissions" ? "active" : "")" 
+                                       href="@Url.Action("Index", "Permissions")">
+                                        <i class="fas fa-lock"></i>
+                                        <span>Permissions</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    }
+                    
+                    @if (hasViewUsersPermission)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link @(controller == "Users" ? "active" : "")" 
+                               href="@Url.Action("Index", "Users")">
+                                <i class="fas fa-users"></i>
+                                <span class="ms-2">Users</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+
+            @if (hasViewCompanySettingsPermission)
+            {
+                <ul class="menu-list">
+                    <li class="divider py-2 lh-sm"><span class="small text-white">ADMINISTRATION</span></li>
+                    <li class="nav-item">
+                        <a class="nav-link @(controller == "CompanySetting" ? "active" : "")" 
+                           href="@Url.Action("Index", "CompanySetting")">
+                            <i class="fas fa-cogs"></i>
+                            <span class="ms-2">Company Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Add Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<!-- Custom styles for the sidebar -->
+<style>
+    .sidebar .menu-list {
+        margin-bottom: 1.5rem;
+        list-style: none;
+        padding-left: 0;
+    }
+    
+    .sidebar .menu-list li {
+        margin-bottom: 3px;
+        width: 100%;
+    }
+    
+    .sidebar .nav-link,
+    .sidebar .m-link {
+        display: flex;
+        align-items: center;
+        padding: 10px 15px;
+        border-radius: 5px;
+        color: rgba(255, 255, 255, 0.7);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        width: 100%;
+    }
+    
+    .sidebar .nav-link:hover,
+    .sidebar .m-link:hover {
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar .nav-link.active,
+    .sidebar .m-link.active {
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.15);
+        font-weight: 500;
+    }
+    
+    .sidebar .sub-menu {
+        padding-left: 1.5rem;
+        margin-bottom: 0.25rem;
+        list-style: none;
+        padding: 0;
+        margin-left: 1.2rem;
+        margin-top: 0.25rem;
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .sidebar .sub-menu li {
+        width: 100%;
+    }
+    
+    .sidebar .sub-menu .ms-link {
+        padding: 8px 15px;
+        display: flex;
+        align-items: center;
+        color: rgba(255, 255, 255, 0.6);
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .sidebar .sub-menu .ms-link:hover {
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+    
+    .sidebar .sub-menu .ms-link.active {
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.12);
+        font-weight: 500;
+    }
+    
+    .sidebar .sub-menu .ms-link i {
+        font-size: 0.85rem;
+        margin-right: 10px;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .sidebar .arrow {
+        transition: transform 0.3s ease;
+        margin-left: auto;
+    }
+    
+    .sidebar .m-link i,
+    .sidebar .nav-link i {
+        width: 20px;
+        text-align: center;
+        margin-right: 8px;
+        font-size: 1rem;
+    }
+    
+    .sidebar .divider {
+        padding: 0.5rem 1.5rem;
+        margin-top: 0.5rem;
+    }
+</style> 

@@ -1,0 +1,96 @@
+﻿@model InvoiceScanner.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "Create User";
+    ViewData["Subtitle"] = "Add a new user to the system";
+
+    string[] roleNames = { "Administrator" };
+    string[] CompanyroleNames = { "Business Administrator", "Business Operator", "Supervisor" };
+}
+
+<div class="container-fluid py-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-primary">New User</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Name" class="form-label fw-bold">Full Name</label>
+                        <input asp-for="Name" class="form-control" required />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="UserName" class="form-label fw-bold">Username</label>
+                        <input asp-for="UserName" class="form-control" required />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                        <small class="form-text text-muted">This will be used for login purposes</small>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="Email" class="form-label fw-bold">Email Address</label>
+                        <input asp-for="Email" type="email" class="form-control" required />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                        <small class="form-text text-muted">Login credentials will be sent to this email</small>
+                    </div>
+                    
+                    @if (User.IsInRole("Administrator"))
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Role</label>
+                            <select name="role" class="form-select">
+                                @foreach (var role in roleNames)
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else if (User.IsInRole("Business Administrator"))
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Role</label>
+                            <select name="role" class="form-select">
+                                @foreach (var role in CompanyroleNames)
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                </div>
+                
+                @if (User.IsInRole("Business Administrator") && ViewBag.BranchId != null)
+                {
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Branch</label>
+                            <select asp-for="BranchId" class="form-select" asp-items="@ViewBag.BranchId"></select>
+                            <span asp-validation-for="BranchId" class="text-danger"></span>
+                        </div>
+                    </div>
+                }
+                
+                <hr class="my-4" />
+                
+                <div class="d-flex">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-plus-circle me-1"></i> Create User
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary ms-2">
+                        <i class="fa fa-arrow-left me-1"></i> Back to List
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

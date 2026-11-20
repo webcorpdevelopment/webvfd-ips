@@ -1,0 +1,118 @@
+/* Dashboard Custom Styles */
+.dashboard-card {
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height: 100%;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card .icon {
+    font-size: 2.5rem;
+    opacity: 0.8;
+}
+
+.dashboard-card .card-body {
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard-card .card-body .bg-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 5rem;
+    opacity: 0.1;
+    z-index: -1;
+}
+
+.dashboard-card.primary {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    color: white;
+}
+
+.dashboard-card.success {
+    background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    color: white;
+}
+
+.dashboard-card.info {
+    background: linear-gradient(135deg, #36b9cc 0%, #258391 100%);
+    color: white;
+}
+
+.dashboard-card.warning {
+    background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+    color: white;
+}
+
+.dashboard-card.danger {
+    background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%);
+    color: white;
+}
+
+.dashboard-card.purple {
+    background: linear-gradient(135deg, #9d65c9 0%, #5d3b82 100%);
+    color: white;
+}
+
+.dashboard-card.pink {
+    background: linear-gradient(135deg, #e83e8c 0%, #ba2969 100%);
+    color: white;
+}
+
+.dashboard-card.dark {
+    background: linear-gradient(135deg, #5a5c69 0%, #373840 100%);
+    color: white;
+}
+
+/* Chart container styles */
+.chart-container {
+    position: relative;
+    height: 350px;
+    width: 100%;
+}
+
+.recent-invoices .table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+}
+
+.refresh-btn {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    transform: rotate(180deg);
+}
+
+.rotate {
+    animation: rotation 1s linear;
+}
+
+@keyframes rotation {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.stat-change {
+    font-size: 0.8rem;
+}
+
+.stat-change.positive {
+    color: #1cc88a;
+}
+
+.stat-change.negative {
+    color: #e74a3b;
+} 
